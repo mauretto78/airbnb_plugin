@@ -1,0 +1,7 @@
+[TRANSLATED_LOGIN]
+translated_username = htsdemo
+translated_password = htsdemo5
+
+[EMAIL_ADDRESSES]
+success_quotation_email_address = "root@localhost";
+error_quotation_email_address = "root@localhost";
