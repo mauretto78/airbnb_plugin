@@ -8,6 +8,7 @@
 
 namespace Features;
 
+use API\V2\Json\ProjectUrls;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
 use Klein\Klein;
@@ -26,10 +27,13 @@ class Airbnb extends BaseFeature {
     }
 
     public function afterTMAnalysisCloseProject( $project_id , $_analyzed_report) {
-        return;
         $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
         $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
         $this->requestQuote( $project_id, $_analyzed_report );
+    }
+
+    public function projectUrls( ProjectUrls $formatted ){
+        return $formatted;
     }
 
 }
