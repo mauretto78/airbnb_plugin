@@ -29,7 +29,7 @@ class Airbnb extends BaseFeature {
     public function afterTMAnalysisCloseProject( $project_id , $_analyzed_report) {
         $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
         $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
-        $this->requestQuote( $project_id, $_analyzed_report );
+        $this->requestProjectQuote( $project_id, $_analyzed_report );
     }
 
     public function projectUrls( ProjectUrls $formatted ){
