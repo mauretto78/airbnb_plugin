@@ -11,10 +11,8 @@ namespace Features;
 use API\V2\Json\ProjectUrls;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
-use Features\Dqf\Utils\ProjectMetadata;
 use Klein\Klein;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
-use RedisHandler;
 
 class Airbnb extends BaseFeature {
 
@@ -24,7 +22,7 @@ class Airbnb extends BaseFeature {
 
     protected static $service_types = [ 'standard', 'priority' ];
 
-    const REFERENCE_QUOTE_METADATA_KEY = "refers_to_pid";
+    const REFERENCE_QUOTE_METADATA_KEY = "append_to_pid";
 
     public static $dependencies = [];
 
@@ -75,6 +73,5 @@ class Airbnb extends BaseFeature {
         $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         return $filter_args;
     }
-
 
 }
