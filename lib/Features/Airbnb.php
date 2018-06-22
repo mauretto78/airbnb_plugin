@@ -13,6 +13,7 @@ use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
 use Klein\Klein;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
+use Plugins\Features\Outsource\Constants\ServiceTypes;
 
 class Airbnb extends BaseFeature {
 
@@ -41,7 +42,7 @@ class Airbnb extends BaseFeature {
 
         $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
         $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
-        $this->requestProjectQuote( $project_id, $_analyzed_report );
+        $this->requestProjectQuote( $project_id, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
     }
 
     public function projectUrls( ProjectUrls $formatted ) {
