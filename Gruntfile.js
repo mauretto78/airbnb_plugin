@@ -15,10 +15,10 @@ module.exports = function(grunt) {
                     }
                 },
                 src: [
-                    'static/src/js/cat_source/microsoft-core.js',
-                    'static/src/js/cat_source/microsoft-core.*.js'
+                    'static/src/js/cat_source/airbnb-core.js',
+                    'static/src/js/cat_source/airbnb-core.*.js'
                 ],
-                dest:  'static/build/microsoft-core-build.js'
+                dest:  'static/build/airbnb-core-build.js'
             },
         },
         sass: {
@@ -28,9 +28,9 @@ module.exports = function(grunt) {
                     includePaths: ['static/src/css/sass/']
                 },
                 src: [
-                    'static/src/css/sass/microsoft-core.scss'
+                    'static/src/css/sass/airbnb-core.scss'
                 ],
-                dest: 'static/build/microsoft-build.css'
+                dest: 'static/build/airbnb-build.css'
             }
         },
         replace: {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Features\Microsoft\Decorator;
+namespace Features\Airbnb\Decorator;
 
 
 use AbstractDecorator;
-use Features\Microsoft\Utils\Routes;
+use Features\Airbnb\Utils\Routes;
 
 class CatDecorator extends AbstractDecorator {
     /**
@@ -13,13 +13,8 @@ class CatDecorator extends AbstractDecorator {
     protected $template;
 
     public function decorate() {
-        $this->template->append( 'footer_js', Routes::staticBuild( '/microsoft-core-build.js' ) );
-        $this->template->append( 'css_resources', Routes::staticBuild( '/microsoft-build.css' ) );
-
-        $this->template->segment_filter_size  = '50' ;
-        $this->template->segment_filter_type  = 'regular_intervals' ;
-        $this->template->footer_show_translate_link = false;
-
+        $this->template->append( 'footer_js', Routes::staticBuild( '/airbnb-core-build.js' ) );
+//        $this->template->append( 'css_resources', Routes::staticBuild( '/microsoft-build.css' ) );
     }
 
 }
