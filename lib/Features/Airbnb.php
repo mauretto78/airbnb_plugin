@@ -13,7 +13,7 @@ use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
 use Klein\Klein;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
-use Plugins\Features\Outsource\Constants\ServiceTypes;
+use Features\Outsource\Constants\ServiceTypes;
 
 class Airbnb extends BaseFeature {
 
