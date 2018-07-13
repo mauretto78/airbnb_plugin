@@ -9,11 +9,17 @@
 namespace Features;
 
 use API\V2\Json\ProjectUrls;
+use Engines_AbstractEngine;
+use Engines_MMT;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
+use Jobs\MetadataDao;
 use Klein\Klein;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
+use TaskRunner\Commons\QueueElement;
+use TmKeyManagement_MemoryKeyStruct;
+use TmKeyManagement_TmKeyManagement;
 
 class Airbnb extends BaseFeature {
 
@@ -29,6 +35,36 @@ class Airbnb extends BaseFeature {
 
     public static function loadRoutes( Klein $klein ) {
         //route( '/job/[:id_job]/[:password]/sign_off', 'GET', 'Features\Airbnb\Controller\SignOffController', 'signedOffCallback' );
+    }
+
+    /**
+     * Allow plugins to force to send requests to MMT even if in analysis
+     * @see Engines_MMT::get()
+     */
+    public function forceMMTAcceptAnalysisRequests( $bool ){
+        return true;
+    }
+
+    /**
+     * @param                        $config
+     * @param Engines_AbstractEngine $engine
+     * @param QueueElement           $queueElement
+     *
+     * @return mixed
+     * @throws \Exception
+     */
+    public function analysisBeforeMTGetContribution( $config, Engines_AbstractEngine $engine, QueueElement $queueElement ){
+
+        if( $engine instanceof Engines_MMT ){
+
+            $config[ 'keys' ] = array_values( $config[ 'id_user' ] );
+            $mt_context = @array_pop( ( new MetadataDao() )->setCacheTTL( 60 * 60 * 24 * 30 )->getByIdJob( $queueElement->params->id_job, 'mt_context' ) );
+            $config[ 'mt_context' ] = ( !empty( $mt_context ) ? $mt_context->value : "" );
+            $config[ 'job_id' ] = $queueElement->params->id_job;
+
+        }
+
+        return $config;
     }
 
     public function afterTMAnalysisCloseProject( $project_id, $_analyzed_report ) {
