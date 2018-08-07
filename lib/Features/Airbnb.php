@@ -8,6 +8,7 @@
 
 namespace Features;
 
+use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
 use Engines_AbstractEngine;
 use Engines_MMT;
@@ -18,8 +19,7 @@ use Klein\Klein;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
 use TaskRunner\Commons\QueueElement;
-use TmKeyManagement_MemoryKeyStruct;
-use TmKeyManagement_TmKeyManagement;
+use TaskRunner\Exceptions\ReQueueException;
 
 class Airbnb extends BaseFeature {
 
@@ -65,6 +65,22 @@ class Airbnb extends BaseFeature {
         }
 
         return $config;
+    }
+
+    /**
+     * @param QueueElement           $queueElement
+     *
+     * @param Engines_AbstractEngine $mt
+     *
+     * @throws ReQueueException
+     */
+    public function handleMTAnalysisRetry( QueueElement $queueElement, Engines_AbstractEngine $mt ){
+
+        if( $mt instanceof Engines_MMT ){
+            $queueElement->params->id_mt_engine = 1;
+            throw new ReQueueException( "Error from MMT. Empty field received even if MT was requested.", TMAnalysisWorker::ERR_REQUEUE );
+        }
+
     }
 
     public function afterTMAnalysisCloseProject( $project_id, $_analyzed_report ) {
