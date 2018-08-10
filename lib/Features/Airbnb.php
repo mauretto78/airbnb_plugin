@@ -10,16 +10,20 @@ namespace Features;
 
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
+use Engines\MMT\MMTServiceApi;
 use Engines_AbstractEngine;
 use Engines_MMT;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
+use Features\Dqf\Utils\UserMetadata;
 use Jobs\MetadataDao;
 use Klein\Klein;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
+use RedisHandler;
 use TaskRunner\Commons\QueueElement;
 use TaskRunner\Exceptions\ReQueueException;
+use Users_UserDao;
 
 class Airbnb extends BaseFeature {
 
@@ -41,11 +45,14 @@ class Airbnb extends BaseFeature {
      * Allow plugins to force to send requests to MMT even if in analysis
      * @see Engines_MMT::get()
      */
-    public function forceMMTAcceptAnalysisRequests( $bool ){
-        return true;
-    }
+//    public function forceMMTAcceptAnalysisRequests( $bool ){
+////        return true;
+//        return $bool; //false
+//    }
 
     /**
+     * @see TMAnalysisWorker::_getMatches()
+     *
      * @param                        $config
      * @param Engines_AbstractEngine $engine
      * @param QueueElement           $queueElement
@@ -53,36 +60,60 @@ class Airbnb extends BaseFeature {
      * @return mixed
      * @throws \Exception
      */
-    public function analysisBeforeMTGetContribution( $config, Engines_AbstractEngine $engine, QueueElement $queueElement ){
-
-        if( $engine instanceof Engines_MMT ){
-
-            $config[ 'keys' ] = array_values( $config[ 'id_user' ] );
-            $mt_context = @array_pop( ( new MetadataDao() )->setCacheTTL( 60 * 60 * 24 * 30 )->getByIdJob( $queueElement->params->id_job, 'mt_context' ) );
-            $config[ 'mt_context' ] = ( !empty( $mt_context ) ? $mt_context->value : "" );
-            $config[ 'job_id' ] = $queueElement->params->id_job;
-
-        }
-
-        return $config;
-    }
+//    public function analysisBeforeMTGetContribution( $config, Engines_AbstractEngine $engine, QueueElement $queueElement ){
+//
+//        if( $engine instanceof Engines_MMT ){
+//
+//            $config[ 'keys' ] = array_values( $config[ 'id_user' ] );
+//            $mt_context = @array_pop( ( new MetadataDao() )->setCacheTTL( 60 * 60 * 24 * 30 )->getByIdJob( $queueElement->params->id_job, 'mt_context' ) );
+//            $config[ 'mt_context' ] = ( !empty( $mt_context ) ? $mt_context->value : "" );
+//            $config[ 'job_id' ] = $queueElement->params->id_job;
+//
+//        }
+//
+//        return $config;
+//    }
 
     /**
+     * @see TMAnalysisWorker::_getMatches()
+     *
      * @param QueueElement           $queueElement
      *
      * @param Engines_AbstractEngine $mt
      *
      * @throws ReQueueException
      */
-    public function handleMTAnalysisRetry( QueueElement $queueElement, Engines_AbstractEngine $mt ){
+//    public function handleMTAnalysisRetry( QueueElement $queueElement, Engines_AbstractEngine $mt ){
+//
+//        if( $mt instanceof Engines_MMT ){
+//            $queueElement->params->id_mt_engine = 1;
+//            throw new ReQueueException( "Error from MMT. Empty field received even if MT was requested.", TMAnalysisWorker::ERR_REQUEUE );
+//        }
+//
+//    }
 
-        if( $mt instanceof Engines_MMT ){
-            $queueElement->params->id_mt_engine = 1;
-            throw new ReQueueException( "Error from MMT. Empty field received even if MT was requested.", TMAnalysisWorker::ERR_REQUEUE );
-        }
-
+    /**
+     * @see \ProjectManager::_createJobs()
+     *
+     * @param \Jobs_JobStruct $jobStruct
+     *
+     * @throws \Predis\Connection\ConnectionException
+     * @throws \ReflectionException
+     */
+    public function beforeInsertJobStruct( \Jobs_JobStruct $jobStruct ){
+        $redisConn = ( new RedisHandler() )->getConnection();
+        $redisConn->setex( "airbnb_old_mt_engine:" . $jobStruct->id_project, 60 * 60 * 24, $jobStruct->id_mt_engine );
+        $jobStruct->id_mt_engine = 1;
     }
 
+    /**
+     * @see TMAnalysisWorker::_tryToCloseProject()
+     *
+     * @param $project_id
+     * @param $_analyzed_report
+     *
+     * @throws \Exception
+     */
     public function afterTMAnalysisCloseProject( $project_id, $_analyzed_report ) {
 
         $metadataDao = new \Projects_MetadataDao();
@@ -95,6 +126,21 @@ class Airbnb extends BaseFeature {
         $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
         $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
         $this->requestProjectQuote( $project_id, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
+
+        //Airbnb has only one job per project but to be generic use a foreach
+        $jobDao = new \Jobs_JobDao();
+        $jobStructs = $jobDao->getByProjectId( $project_id, 60 );
+
+        $redisConn = ( new RedisHandler() )->getConnection();
+        $old_mt_engine = $redisConn->get( "airbnb_old_mt_engine:" . $jobStructs[0]->id_project );
+
+        foreach ( $jobStructs as $jobStruct ){
+            $jobStruct->id_mt_engine = $old_mt_engine;
+            $jobDao->updateStruct( $jobStruct );
+        }
+
+        $redisConn->del( "airbnb_old_mt_engine:" . $jobStructs[0]->id_project );
+
     }
 
     public function projectUrls( ProjectUrls $formatted ) {
@@ -103,6 +149,8 @@ class Airbnb extends BaseFeature {
 
     /**
      * Add options to project metadata
+     *
+     * @see \NewController::validateMetadataParam()
      *
      * @param $metadata
      * @param $__postInput
@@ -122,6 +170,12 @@ class Airbnb extends BaseFeature {
         return $metadata;
     }
 
+    /**
+     * @see \NewController::__construct()
+     * @param $filter_args
+     *
+     * @return mixed
+     */
     public function filterNewProjectInputFilters( $filter_args ) {
         $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         return $filter_args;
