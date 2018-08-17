@@ -11,6 +11,7 @@ namespace Features;
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
 use Engines\MMT\MMTServiceApi;
+use Engines\Traits\HotSwap;
 use Engines_AbstractEngine;
 use Engines_MMT;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
@@ -27,7 +28,7 @@ use Users_UserDao;
 
 class Airbnb extends BaseFeature {
 
-    use TranslatedTrait;
+    use TranslatedTrait, HotSwap;
 
     const FEATURE_CODE = "airbnb";
 
@@ -101,9 +102,7 @@ class Airbnb extends BaseFeature {
      * @throws \ReflectionException
      */
     public function beforeInsertJobStruct( \Jobs_JobStruct $jobStruct ){
-        $redisConn = ( new RedisHandler() )->getConnection();
-        $redisConn->setex( "airbnb_old_mt_engine:" . $jobStruct->id_project, 60 * 60 * 24, $jobStruct->id_mt_engine );
-        $jobStruct->id_mt_engine = 1;
+        $this->swapOn( $jobStruct );
     }
 
     /**
@@ -127,19 +126,7 @@ class Airbnb extends BaseFeature {
         $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
         $this->requestProjectQuote( $project_id, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
 
-        //Airbnb has only one job per project but to be generic use a foreach
-        $jobDao = new \Jobs_JobDao();
-        $jobStructs = $jobDao->getByProjectId( $project_id, 60 );
-
-        $redisConn = ( new RedisHandler() )->getConnection();
-        $old_mt_engine = $redisConn->get( "airbnb_old_mt_engine:" . $jobStructs[0]->id_project );
-
-        foreach ( $jobStructs as $jobStruct ){
-            $jobStruct->id_mt_engine = $old_mt_engine;
-            $jobDao->updateStruct( $jobStruct );
-        }
-
-        $redisConn->del( "airbnb_old_mt_engine:" . $jobStructs[0]->id_project );
+        $this->swapOff( $project_id );
 
     }
 
