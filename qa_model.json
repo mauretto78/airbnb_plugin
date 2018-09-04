@@ -1,0 +1,93 @@
+{
+  "model": {
+    "version" : 1,
+    "label": "Airbnb",
+    "categories": [
+      {
+        "label": "Accuracy",
+        "severities" : false,
+        "subcategories" : [
+          { "label": "Addition",
+            "code" : "ADD"
+          },
+          { "label": "Omission",
+            "code" : "MSS"
+          },
+          { "label": "Mistranslation",
+            "code" : "MIS"
+          },
+          { "label": "Untranslated",
+            "code" : "NTR"
+          },
+          { "label": "Inconsistency",
+            "code" : "INC"
+          },
+        ]
+      },
+      {
+        "label": "Client guidelines",
+        "severities" : false,
+        "subcategories" : [
+          { "label": "Terminology",
+            "code" : "TRM"
+          },
+          { "label": "Style guide",
+            "code" : "GUI"
+          },
+          { "label": "Project instruction",
+            "code" : "INS"
+          }
+        ]
+      },
+      {
+        "label": "Linguistic",
+        "severities" : false,
+        "subcategories" : [
+          { "label": "Punctuation",
+            "code" : "PCT"
+          },
+          { "label": "Spelling",
+            "code" : "SPL"
+          },
+          { "label": "Grammar",
+            "code" : "GRM"
+          },
+          { "label": "Locale",
+            "code" : "LOC"
+          }
+        ]
+      },
+      {
+        "label": "Style",
+        "severities" : false,
+        "subcategories" : [
+          { "label": "Style",
+            "code" : "STY"
+          },
+          { "label": "Readability",
+            "code" : "RDB"
+          },
+          { "label": "Unidiomatic",
+            "code" : "IDM"
+          }
+        ]
+      }
+    ],
+    "severities": [
+      {
+        "label": "Minor",
+        "penalty": 3
+      },
+      {
+        "label": "Major",
+        "penalty": 100
+      }
+    ],
+    "passfail" : {
+      "type" : "points_per_thousand",
+      "options" : {
+        "limit" : 20000
+      }
+    }
+  }
+}

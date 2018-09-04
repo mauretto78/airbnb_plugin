@@ -15,6 +15,7 @@ use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
 use Jobs\MetadataDao;
 use Klein\Klein;
+use Features;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
 use TaskRunner\Commons\QueueElement;
@@ -31,7 +32,10 @@ class Airbnb extends BaseFeature {
 
     const REFERENCE_QUOTE_METADATA_KEY = "append_to_pid";
 
-    public static $dependencies = [];
+    public static $dependencies = [
+            Features::TRANSLATION_VERSIONS,
+            Features::REVIEW_EXTENDED
+    ];
 
     public static function loadRoutes( Klein $klein ) {
         //route( '/job/[:id_job]/[:password]/sign_off', 'GET', 'Features\Airbnb\Controller\SignOffController', 'signedOffCallback' );
@@ -109,6 +113,17 @@ class Airbnb extends BaseFeature {
     public function filterNewProjectInputFilters( $filter_args ) {
         $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         return $filter_args;
+    }
+
+    /**
+     * Entry point for project data validation for this feature.
+     *
+     * @param $projectStructure
+     */
+    public function validateProjectCreation( $projectStructure )  {
+        //override Revise Improved qa Model
+        $qa_mode_file = realpath( self::getPluginBasePath() . "/../qa_model.json" );
+        ReviewExtended::loadAndValidateModelFromJsonFile( $projectStructure, $qa_mode_file );
     }
 
 }
