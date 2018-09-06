@@ -5,88 +5,35 @@
     "categories": [
       {
         "label": "Accuracy",
-        "severities" : false,
-        "subcategories" : [
-          { "label": "Addition",
-            "code" : "ADD"
-          },
-          { "label": "Omission",
-            "code" : "MSS"
-          },
-          { "label": "Mistranslation",
-            "code" : "MIS"
-          },
-          { "label": "Untranslated",
-            "code" : "NTR"
-          },
-          { "label": "Inconsistency",
-            "code" : "INC"
-          },
-        ]
+        "code": "ACC"
       },
       {
         "label": "Client guidelines",
-        "severities" : false,
-        "subcategories" : [
-          { "label": "Terminology",
-            "code" : "TRM"
-          },
-          { "label": "Style guide",
-            "code" : "GUI"
-          },
-          { "label": "Project instruction",
-            "code" : "INS"
-          }
-        ]
+        "code": "GUI"
       },
       {
         "label": "Linguistic",
-        "severities" : false,
-        "subcategories" : [
-          { "label": "Punctuation",
-            "code" : "PCT"
-          },
-          { "label": "Spelling",
-            "code" : "SPL"
-          },
-          { "label": "Grammar",
-            "code" : "GRM"
-          },
-          { "label": "Locale",
-            "code" : "LOC"
-          }
-        ]
+        "code": "LNG"
       },
       {
         "label": "Style",
-        "severities" : false,
-        "subcategories" : [
-          { "label": "Style",
-            "code" : "STY"
-          },
-          { "label": "Readability",
-            "code" : "RDB"
-          },
-          { "label": "Unidiomatic",
-            "code" : "IDM"
-          }
-        ]
+        "code": "STY"
       }
     ],
     "severities": [
       {
         "label": "Minor",
-        "penalty": 3
+        "penalty": 1
       },
       {
         "label": "Major",
-        "penalty": 100
+        "penalty": 2
       }
     ],
     "passfail" : {
       "type" : "points_per_thousand",
       "options" : {
-        "limit" : 20000
+        "limit" : 20
       }
     }
   }
