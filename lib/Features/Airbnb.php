@@ -33,8 +33,8 @@ class Airbnb extends BaseFeature {
     const REFERENCE_QUOTE_METADATA_KEY = "append_to_pid";
 
     public static $dependencies = [
-            Features::TRANSLATION_VERSIONS,
-            Features::REVIEW_EXTENDED
+//            Features::TRANSLATION_VERSIONS,
+//            Features::REVIEW_EXTENDED
     ];
 
     public static function loadRoutes( Klein $klein ) {
