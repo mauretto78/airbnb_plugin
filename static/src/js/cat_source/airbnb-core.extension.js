@@ -24,27 +24,29 @@
                     }
                 });
             }
-            let targetPrefix = config.target_rfc.split('-')[0];
-            let langLike;
-            _.forOwn(PLURAL_TYPE_NAME_TO_LANGUAGES, function(value, key) {
-                if ( value.indexOf(targetPrefix) !== -1 ) {
-                    langLike = key;
-                    return false;
-                }
-            });
-            if ( !_.isUndefined(langLike) && PLURAL_TYPES[langLike] ) {
-                let rules = PLURAL_TYPES[langLike];
-                let html = <div className="note" key="forms">
-                    <span className="note-label">Plural forms: </span>
-                    <span dangerouslySetInnerHTML={self.allowHTML(rules.num_forms)}/>
-                </div>;
-                notesHtml.push( html );
-                if ( rules.doc && rules.doc.length ) {
-                    html = <div className="note" key="rules">
-                        <span className="note-label">Rules for smart count: </span>
-                        <span dangerouslySetInnerHTML={self.allowHTML(rules.doc.join(" |||| "))}/>
+            if (this.props.segmentSource.indexOf('||||') > -1) {
+                let targetPrefix = config.target_rfc.split('-')[0];
+                let langLike;
+                _.forOwn(PLURAL_TYPE_NAME_TO_LANGUAGES, function(value, key) {
+                    if ( value.indexOf(targetPrefix) !== -1 ) {
+                        langLike = key;
+                        return false;
+                    }
+                });
+                if ( !_.isUndefined(langLike) && PLURAL_TYPES[langLike] ) {
+                    let rules = PLURAL_TYPES[langLike];
+                    let html = <div className="note" key="forms">
+                        <span className="note-label">Plural forms: </span>
+                        <span dangerouslySetInnerHTML={self.allowHTML(rules.num_forms)}/>
                     </div>;
                     notesHtml.push( html );
+                    if ( rules.doc && rules.doc.length ) {
+                        html = <div className="note" key="rules">
+                            <span className="note-label">Rules for smart count: </span>
+                            <span dangerouslySetInnerHTML={self.allowHTML(rules.doc.join(" |||| "))}/>
+                        </div>;
+                        notesHtml.push( html );
+                    }
                 }
             }
             if (notesHtml.length === 0) {
