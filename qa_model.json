@@ -28,12 +28,12 @@
       },{
         "label": "Minor",
         "dqf_id" : 2,
-        "penalty": 3
+        "penalty": 1
       },
       {
         "label": "Major",
         "dqf_id" : 3,
-        "penalty": 100
+        "penalty": 2
       }
     ],
     "passfail" : {
