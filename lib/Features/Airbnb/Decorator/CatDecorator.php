@@ -14,7 +14,7 @@ class CatDecorator extends AbstractDecorator {
 
     public function decorate() {
         $this->template->append( 'footer_js', Routes::staticBuild( '/airbnb-core-build.js' ) );
-//        $this->template->append( 'css_resources', Routes::staticBuild( '/microsoft-build.css' ) );
+        $this->template->append( 'css_resources', Routes::staticBuild( '/airbnb-build.css' ) );
     }
 
 }
