@@ -209,8 +209,8 @@
                 let segment = segImmutable.toJS();
                 let collectionType = getCollectionType(segment);
                 if (collectionsTypeArray.indexOf(collectionType) === -1) {
-                    let collectionTypeSeparator = <div className="collection-type-separator" key={collectionType+index}>
-                        Collection Name: <b>{collectionType}</b></div>;
+                    let collectionTypeSeparator = <section id="" className="collection-type-separator" key={collectionType+index}>
+                        Collection Name: <b>{collectionType}</b></section>;
                     items.push(collectionTypeSeparator);
                     collectionsTypeArray.push(collectionType);
                 }
