@@ -1,2 +1,2 @@
-# microsoft_plugin
+# Airbnb_plugin
 MateCat plugin for Airbnb workflow management
