@@ -2,7 +2,13 @@
 
 
 (function() {
-    
+    var originalRegisterFooterTabs = UI.registerFooterTabs;
+    $.extend(UI, {
+        registerFooterTabs: function () {
+            originalRegisterFooterTabs.apply(this);
+            SegmentActions.registerTab('messages', true, true);
+        }
+    });
     function overrideTabMessages( SegmentTabMessages ) {
         SegmentTabMessages.prototype.getNotes = function (  ) {
             let notesHtml = [];
