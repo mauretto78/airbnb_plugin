@@ -341,9 +341,16 @@
             return items;
         }
     }
+
+    function overrideSetDefaultTabOpen( SegmentFooter ) {
+        SegmentFooter.prototype.setDefaultTabOpen = function (  ) {
+            return false;
+        }
+    }
     
     overrideTabMessages(SegmentTabMessages);
     overrideGetMessages(SegmentsContainer);
+    overrideSetDefaultTabOpen(SegmentFooter);
 
 
 
