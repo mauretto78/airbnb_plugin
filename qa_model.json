@@ -22,7 +22,7 @@
     ],
     "severities": [
       {
-        "label": "Neutral",
+        "label": "Repetition",
         "dqf_id" : 1,
         "penalty": 0
       },{
