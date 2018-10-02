@@ -20,6 +20,7 @@ use Klein\Klein;
 use Features;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
+use Segments_SegmentStruct;
 use TaskRunner\Commons\QueueElement;
 use TaskRunner\Exceptions\ReQueueException;
 
@@ -108,7 +109,7 @@ class Airbnb extends BaseFeature {
             foreach( $projectStructure[ 'notes' ][ $_segment_metadata[ 'internal_id' ] ][ 'entries' ] as $k => $entry ){
 
                 if( strpos( $entry, 'phrase_key|¶|' ) !== false ){
-                    $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( str_replace( 'phrase_key|¶|', '', $entry ) . $_segment_metadata[ 'segment' ] );
+                    $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( $entry . $_segment_metadata[ 'segment' ] );
                 }
 
             }
@@ -136,30 +137,23 @@ class Airbnb extends BaseFeature {
          */
         if( isset( $original_config[ 'additional_params' ][ 'spice' ] ) ){
             $parameters[ 'context_before' ] = $original_config[ 'additional_params' ][ 'spice' ];
-        } else {
-            /*
-             * From getContribution we will get the field context_before set with phrase_key
-             */
-            $parameters[ 'context_before' ] = md5( str_replace( 'phrase_key|¶|', '', $parameters[ 'context_before' ] ) . $parameters[ 'q' ] );
+            $parameters[ 'context_after' ]  = null;
         }
-
-        $parameters[ 'context_after' ]  = null;
 
         return $parameters;
 
     }
 
     /**
-     * @see \setTranslationController::evalSetContribution()
+     * @see \getContributionController::doAction()
+     * @see \setTranslationController
      *
-     * @param ContributionStruct      $contributionStruct
-     * @param \Projects_ProjectStruct $projectStruct
+     * @param $segmentsList Segments_SegmentStruct[]
+     * @param $postInput
      */
-    public function filterContributionStructOnSetTranslation( ContributionStruct $contributionStruct, \Projects_ProjectStruct $projectStruct ){
-
-        $contributionStruct->context_before = md5( str_replace( 'phrase_key|¶|', '', $contributionStruct->context_before ) . $contributionStruct->segment );
-        $contributionStruct->context_after  = null;
-
+    public function rewriteContributionContexts( $segmentsList, $postInput ){
+        $segmentsList->id_before->segment = md5( $postInput[ 'context_before' ] . $segmentsList->id_segment->segment );
+        $segmentsList->id_after = null;
     }
 
     /**
