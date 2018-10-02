@@ -10,22 +10,18 @@ namespace Features;
 
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
-use Engines\MMT\MMTServiceApi;
+use Contribution\ContributionStruct;
 use Engines\Traits\HotSwap;
 use Engines_AbstractEngine;
 use Engines_MMT;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
-use Features\Dqf\Utils\UserMetadata;
-use Jobs\MetadataDao;
 use Klein\Klein;
 use Features;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
-use RedisHandler;
 use TaskRunner\Commons\QueueElement;
 use TaskRunner\Exceptions\ReQueueException;
-use Users_UserDao;
 
 class Airbnb extends BaseFeature {
 
@@ -98,6 +94,75 @@ class Airbnb extends BaseFeature {
 //    }
 
     /**
+     * @see \ProjectManager::_storeSegments()
+     *
+     * @param $_segment_metadata array
+     * @param $projectStructure
+     *
+     * @return array
+     */
+    public function appendFieldToAnalysisObject( $_segment_metadata, \ArrayObject $projectStructure ){
+
+        if ( $projectStructure[ 'notes' ]->offsetExists( $_segment_metadata[ 'internal_id' ] ) ) {
+
+            foreach( $projectStructure[ 'notes' ][ $_segment_metadata[ 'internal_id' ] ][ 'entries' ] as $k => $entry ){
+
+                if( strpos( $entry, 'phrase_key|¶|' ) !== false ){
+                    $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( str_replace( 'phrase_key|¶|', '', $entry ) . $_segment_metadata[ 'segment' ] );
+                }
+
+            }
+
+        }
+
+        return $_segment_metadata;
+
+    }
+
+    /**
+     * @see \Engines_MyMemory::get()
+     * @see Airbnb::appendFieldToAnalysisObject()
+     *
+     * @param $parameters
+     *
+     * @param $original_config
+     *
+     * @return mixed
+     */
+    public function filterMyMemoryGetParameters( $parameters, $original_config ){
+
+        /*
+         * From analysis we will have additional params and spice field
+         */
+        if( isset( $original_config[ 'additional_params' ][ 'spice' ] ) ){
+            $parameters[ 'context_before' ] = $original_config[ 'additional_params' ][ 'spice' ];
+        } else {
+            /*
+             * From getContribution we will get the field context_before set with phrase_key
+             */
+            $parameters[ 'context_before' ] = md5( str_replace( 'phrase_key|¶|', '', $parameters[ 'context_before' ] ) . $parameters[ 'q' ] );
+        }
+
+        $parameters[ 'context_after' ]  = null;
+
+        return $parameters;
+
+    }
+
+    /**
+     * @see \setTranslationController::evalSetContribution()
+     *
+     * @param ContributionStruct      $contributionStruct
+     * @param \Projects_ProjectStruct $projectStruct
+     */
+    public function filterContributionStructOnSetTranslation( ContributionStruct $contributionStruct, \Projects_ProjectStruct $projectStruct ){
+
+        $contributionStruct->context_before = md5( str_replace( 'phrase_key|¶|', '', $contributionStruct->context_before ) . $contributionStruct->segment );
+        $contributionStruct->context_after  = null;
+
+    }
+
+    /**
      * @see \ProjectManager::_createJobs()
      *
      * @param \Jobs_JobStruct $jobStruct
@@ -141,7 +206,7 @@ class Airbnb extends BaseFeature {
     /**
      * Add options to project metadata
      *
-     * @see \NewController::validateMetadataParam()
+     * @see \NewController::__validateMetadataParam()
      *
      * @param $metadata
      * @param $__postInput
