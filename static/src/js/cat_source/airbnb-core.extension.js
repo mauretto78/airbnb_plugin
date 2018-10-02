@@ -2,7 +2,113 @@
 
 
 (function() {
-    
+    var originalRegisterFooterTabs = UI.registerFooterTabs;
+    $.extend(UI, {
+        registerFooterTabs: function () {
+            originalRegisterFooterTabs.apply(this);
+            SegmentActions.registerTab('messages', true, true);
+        },
+        getContextBefore: function(segmentId) {
+            var segment = $('#segment-' + segmentId);
+            var originalId = segment.attr('data-split-original-id');
+            var segmentBefore = (function  findBefore(segment) {
+                var before = segment.prev();
+                if (before.length === 0 ) {
+                    return undefined;
+                }
+                else if (before.attr('data-split-original-id') && before.attr('data-split-original-id') !== originalId) {
+                    return before;
+                } else {
+                    return findBefore(before);
+                }
+
+            })(segment);
+            // var segmentBefore = findSegmentBefore();
+            if (_.isUndefined(segmentBefore)) {
+                return null;
+            }
+            var segmentBeforeId = UI.getSegmentId(segmentBefore);
+            var isSplitted = segmentBeforeId.split('-').length > 1;
+            if (isSplitted) {
+                return this.collectSplittedTranslations(segmentBeforeId, ".source");
+            } else if (config.brPlaceholdEnabled)  {
+                return this.postProcessEditarea(segmentBefore, '.source');
+            } else {
+                return $('.source', segmentBefore ).text();
+            }
+        },
+        getContextAfter: function(segmentId) {
+            var segment = $('#segment-' + segmentId);
+            var originalId = segment.attr('data-split-original-id');
+            var segmentAfter = (function findAfter(segment) {
+                var after = segment.next();
+                if (after.length === 0 ) {
+                    return undefined;
+                }
+                else if (after.attr('data-split-original-id') && after.attr('data-split-original-id') !== originalId) {
+                    return after;
+                } else {
+                    return findAfter(after);
+                }
+
+            })(segment);
+            if (_.isUndefined(segmentAfter)) {
+                return null;
+            }
+            var segmentAfterId = UI.getSegmentId(segmentAfter);
+            var isSplitted = segmentAfterId.split('-').length > 1;
+            if (isSplitted) {
+                return this.collectSplittedTranslations(segmentAfterId, ".source");
+            } else if (config.brPlaceholdEnabled)  {
+                return this.postProcessEditarea(segmentAfter, '.source');
+            } else {
+                return $('.source', segmentAfter ).text();
+            }
+        },
+        getIdBefore: function(segmentId) {
+            var segment = $('#segment-' + segmentId);
+            var originalId = segment.attr('data-split-original-id');
+            var segmentBefore = (function  findBefore(segment) {
+                var before = segment.prev();
+                if (before.length === 0 ) {
+                    return undefined;
+                }
+                else if (before.attr('data-split-original-id') !== originalId) {
+                    return before;
+                } else {
+                    return findBefore(before);
+                }
+
+            })(segment);
+            // var segmentBefore = findSegmentBefore();
+            if (_.isUndefined(segmentBefore)) {
+                return null;
+            }
+            var segmentBeforeId = UI.getSegmentId(segmentBefore);
+            return segmentBeforeId;
+        },
+        getIdAfter: function(segmentId) {
+            var segment = $('#segment-' + segmentId);
+            var originalId = segment.attr('data-split-original-id');
+            var segmentAfter = (function findAfter(segment) {
+                var after = segment.next();
+                if (after.length === 0 ) {
+                    return undefined;
+                }
+                else if (after.attr('data-split-original-id') !== originalId) {
+                    return after;
+                } else {
+                    return findAfter(after);
+                }
+
+            })(segment);
+            if (_.isUndefined(segmentAfter)) {
+                return null;
+            }
+            var segmentAfterId = UI.getSegmentId(segmentAfter);
+            return segmentAfterId;
+        },
+    });
     function overrideTabMessages( SegmentTabMessages ) {
         SegmentTabMessages.prototype.getNotes = function (  ) {
             let notesHtml = [];
@@ -209,8 +315,8 @@
                 let segment = segImmutable.toJS();
                 let collectionType = getCollectionType(segment);
                 if (collectionsTypeArray.indexOf(collectionType) === -1) {
-                    let collectionTypeSeparator = <section id="" className="collection-type-separator" key={collectionType+index}>
-                        Collection Name: <b>{collectionType}</b></section>;
+                    let collectionTypeSeparator = <div id="" className="collection-type-separator" key={collectionType+index}>
+                        Collection Name: <b>{collectionType}</b></div>;
                     items.push(collectionTypeSeparator);
                     collectionsTypeArray.push(collectionType);
                 }
@@ -235,9 +341,16 @@
             return items;
         }
     }
+
+    function overrideSetDefaultTabOpen( SegmentFooter ) {
+        SegmentFooter.prototype.setDefaultTabOpen = function (  ) {
+            return false;
+        }
+    }
     
     overrideTabMessages(SegmentTabMessages);
     overrideGetMessages(SegmentsContainer);
+    overrideSetDefaultTabOpen(SegmentFooter);
 
 
 
