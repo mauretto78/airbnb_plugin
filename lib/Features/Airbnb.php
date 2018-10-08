@@ -109,7 +109,7 @@ class Airbnb extends BaseFeature {
             foreach( $projectStructure[ 'notes' ][ $_segment_metadata[ 'internal_id' ] ][ 'entries' ] as $k => $entry ){
 
                 if( strpos( $entry, 'phrase_key|¶|' ) !== false ){
-                    $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( $entry . $_segment_metadata[ 'segment' ] );
+                    $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( str_replace( 'phrase_key|¶|', '', $entry ) . $_segment_metadata[ 'segment' ] );
                 }
 
             }
@@ -152,7 +152,7 @@ class Airbnb extends BaseFeature {
      * @param $postInput
      */
     public function rewriteContributionContexts( $segmentsList, $postInput ){
-        $segmentsList->id_before->segment = md5( $postInput[ 'context_before' ] . $segmentsList->id_segment->segment );
+        $segmentsList->id_before->segment = md5( str_replace( 'phrase_key|¶|', '', $postInput[ 'context_before' ] ) . $segmentsList->id_segment->segment );
         $segmentsList->id_after = null;
     }
 
