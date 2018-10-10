@@ -229,7 +229,7 @@
 
             "chinese_like" : ["id", "ja", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
 
-            "german_like" : ["da", "de", "en", "es", "fi", "el", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv"],
+            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv"],
 
             "french_like" : ["fr", "tl"],
 
