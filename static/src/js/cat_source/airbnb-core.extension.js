@@ -10,7 +10,12 @@
         },
         getContextBefore: function(segmentId) {
             let $segment = $('#segment-' + segmentId);
-            let segmentObj = SegmentStore.getSegmentByIdToJS(segmentId, UI.getSegmentFileId($segment));
+            let segmentObj;
+            try {
+                segmentObj = SegmentStore.getSegmentByIdToJS(segmentId, UI.getSegmentFileId($segment));
+            } catch (e) {
+                return null;
+            }
             let phraseKeyNote = segmentObj.notes.find((item) => {
                 return item.note.indexOf("phrase_key|¶|") >= 0;
             });
