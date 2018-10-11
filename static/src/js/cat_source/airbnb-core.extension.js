@@ -11,14 +11,16 @@
         getContextBefore: function(segmentId) {
             let $segment = $('#segment-' + segmentId);
             let segmentObj;
+            let phraseKeyNote;
             try {
                 segmentObj = SegmentStore.getSegmentByIdToJS(segmentId, UI.getSegmentFileId($segment));
+                phraseKeyNote = segmentObj.notes.find((item) => {
+                    return item.note.indexOf("phrase_key|¶|") >= 0;
+                });
             } catch (e) {
                 return null;
             }
-            let phraseKeyNote = segmentObj.notes.find((item) => {
-                return item.note.indexOf("phrase_key|¶|") >= 0;
-            });
+
             if (phraseKeyNote) {
                 return phraseKeyNote.note
             } else {
