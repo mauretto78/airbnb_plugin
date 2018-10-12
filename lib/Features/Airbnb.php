@@ -178,16 +178,23 @@ class Airbnb extends BaseFeature {
      */
     public function afterTMAnalysisCloseProject( $project_id, $_analyzed_report ) {
 
-        $metadataDao = new \Projects_MetadataDao();
-        $quote_pid_append = $metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
+        $config = self::getConfig();
+        $projectStruct = \Projects_ProjectDao::findById( $project_id );
 
-        if( !empty( $quote_pid_append ) ){
-            $this->setExternalParentProjectId( $quote_pid_append );
+        if( $projectStruct->id_customer != $config[ 'airbnb_Translated_internal_user' ] ){
+
+            $metadataDao = new \Projects_MetadataDao();
+            $quote_pid_append = @$metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
+
+            if( !empty( $quote_pid_append ) ){
+                $this->setExternalParentProjectId( $quote_pid_append );
+            }
+
+            $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
+            $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
+            $this->requestProjectQuote( $projectStruct, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
+
         }
-
-        $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
-        $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
-        $this->requestProjectQuote( $project_id, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
 
         $this->swapOff( $project_id );
 
