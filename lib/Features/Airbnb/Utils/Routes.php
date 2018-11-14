@@ -8,16 +8,20 @@
  */
 namespace Features\Airbnb\Utils;
 
+use Features\Airbnb;
+
 class Routes {
 
 
     public static function staticSrc( $file, $options=array() ) {
+        $path = \Features::getPluginDirectoryName(Airbnb::FEATURE_CODE);
         $host = \Routes::pluginsBase( $options );
-        return $host . "/airbnb/static/src/$file" ;
+        return $host . "/$path/static/src/$file" ;
     }
 
     public static function staticBuild( $file, $options=array() ) {
+        $path = \Features::getPluginDirectoryName(Airbnb::FEATURE_CODE);
         $host = \Routes::pluginsBase( $options );
-        return $host . "/airbnb/static/build/$file" ;
+        return $host . "/$path/static/build/$file" ;
     }
 }
