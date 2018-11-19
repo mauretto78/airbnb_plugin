@@ -1,6 +1,7 @@
 [TRANSLATED_LOGIN]
 translated_username = htsdemo
 translated_password = htsdemo5
+airbnb_translated_internal_user[] = 'root@localhost'
 
 [EMAIL_ADDRESSES]
 success_quotation_email_address = "root@localhost";
