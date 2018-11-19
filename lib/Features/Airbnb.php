@@ -180,8 +180,9 @@ class Airbnb extends BaseFeature {
 
         $config = self::getConfig();
         $projectStruct = \Projects_ProjectDao::findById( $project_id );
+        $internal_users = $config[ 'airbnb_translated_internal_user' ];
 
-        if( $projectStruct->id_customer != $config[ 'airbnb_Translated_internal_user' ] ){
+        if( !in_array( $projectStruct->id_customer, $internal_users ) ){
 
             $metadataDao = new \Projects_MetadataDao();
             $quote_pid_append = @$metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
