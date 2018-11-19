@@ -140,6 +140,8 @@ class Airbnb extends BaseFeature {
             $parameters[ 'context_after' ]  = null;
         }
 
+        $parameters[ 'cid' ] = Airbnb::FEATURE_CODE;
+
         return $parameters;
 
     }
