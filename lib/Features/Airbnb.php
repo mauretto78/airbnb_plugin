@@ -10,17 +10,18 @@ namespace Features;
 
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
-use Contribution\ContributionStruct;
 use Engines\Traits\HotSwap;
 use Engines_AbstractEngine;
 use Engines_MMT;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
+use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Klein\Klein;
-use Features;
 use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
 use Segments_SegmentStruct;
+use SubFiltering\Commons\Pipeline;
+use SubFiltering\Filters\TwigToPh;
 use TaskRunner\Commons\QueueElement;
 use TaskRunner\Exceptions\ReQueueException;
 
@@ -252,6 +253,16 @@ class Airbnb extends BaseFeature {
         //override Revise Improved qa Model
         $qa_mode_file = realpath( self::getPluginBasePath() . "/../qa_model.json" );
         ReviewExtended::loadAndValidateModelFromJsonFile( $projectStructure, $qa_mode_file );
+    }
+
+    public function fromLayer0ToLayer1( Pipeline $channel ) {
+        $channel->addAfter( new TwigToPh(), new Variables() );
+        return $channel;
+    }
+
+    public function fromLayer0ToLayer2( Pipeline $channel ) {
+        $channel->addAfter( new TwigToPh(), new Variables() );
+        return $channel;
     }
 
 }
