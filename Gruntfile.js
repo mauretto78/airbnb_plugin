@@ -1,6 +1,6 @@
 module.exports = function(grunt) {
 
-    var es2015Preset = require('babel-preset-es2015');
+    var es2015Preset = require('babel-preset-env');
     var reactPreset = require('babel-preset-react');
 
     grunt.initConfig( {
