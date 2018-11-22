@@ -21,7 +21,7 @@ use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
-use SubFiltering\Filters\TwigToPh;
+use SubFiltering\Filters\HtmlToPh;
 use TaskRunner\Commons\QueueElement;
 use TaskRunner\Exceptions\ReQueueException;
 
@@ -256,12 +256,12 @@ class Airbnb extends BaseFeature {
     }
 
     public function fromLayer0ToLayer1( Pipeline $channel ) {
-        $channel->addAfter( new TwigToPh(), new Variables() );
+        $channel->addAfter( new HtmlToPh(), new Variables() );
         return $channel;
     }
 
     public function fromLayer0ToLayer2( Pipeline $channel ) {
-        $channel->addAfter( new TwigToPh(), new Variables() );
+        $channel->addAfter( new HtmlToPh(), new Variables() );
         return $channel;
     }
 

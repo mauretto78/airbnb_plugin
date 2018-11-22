@@ -20,7 +20,14 @@ class Variables extends AbstractHandler {
      * @return string
      */
     public function transform( $segment ) {
-        preg_match_all( '/%{[^ ]+}/', $segment, $html, PREG_SET_ORDER );
+        /*
+         * Examples:
+         * - %{# }
+         * - %{\n}$spaces=2%{\n}
+         * - %{{(text-align=center)}}
+         * - %{vars}
+         */
+        preg_match_all( '%{{[^}]*?}}|(%{[^}]*?}).*?\1|(%{[^}]*?})/', $segment, $html, PREG_SET_ORDER );
         foreach ( $html as $pos => $variable ) {
             //replace subsequent elements excluding already encoded
             $segment = preg_replace(
