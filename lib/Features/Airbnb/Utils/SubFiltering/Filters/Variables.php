@@ -27,7 +27,7 @@ class Variables extends AbstractHandler {
          * - %{{(text-align=center)}}
          * - %{vars}
          */
-        preg_match_all( '%{{[^}]*?}}|(%{[^}]*?}).*?\1|(%{[^}]*?})/', $segment, $html, PREG_SET_ORDER );
+        preg_match_all( '/%{{[^}]*?}}|(%{[^}]*?}).*?\1|(%{[^}]*?})/', $segment, $html, PREG_SET_ORDER );
         foreach ( $html as $pos => $variable ) {
             //replace subsequent elements excluding already encoded
             $segment = preg_replace(
