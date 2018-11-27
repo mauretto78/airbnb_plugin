@@ -268,4 +268,16 @@ class Airbnb extends BaseFeature {
         return $channel;
     }
 
+    public function checkTagMismatch( $errorType, \QA $QA ){
+        if( strpos( $QA->getSourceSeg(), "|||" ) !== false ){
+            $QA->addCustomError( [
+                    'code'  => 2000,
+                    'debug' => 'Smart Count variable missing',
+                    'tip'   => 'Check your language specific configuration.'
+            ] );
+            return 2000;
+        }
+        return $errorType;
+    }
+
 }
