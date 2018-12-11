@@ -190,7 +190,8 @@ class Airbnb extends BaseFeature {
                         'urls'             => json_encode( $urls ),
                         'append_to_pid'    => ( !empty( $this->external_parent_project_id ) ? $this->external_parent_project_id : null ),
                         'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
-                        'matecat_host'     => parse_url( \INIT::$HTTPHOST, PHP_URL_HOST )
+                        'matecat_host'     => parse_url( \INIT::$HTTPHOST, PHP_URL_HOST ),
+                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] )
                 ], PHP_QUERY_RFC3986 );
 
     }
