@@ -198,6 +198,39 @@ class Airbnb extends BaseFeature {
     }
 
     /**
+     * @param \Jobs_JobStruct         $job
+     * @param                         $eq_word
+     * @param \Projects_ProjectStruct $project
+     * @param string                  $service_type
+     *
+     * @return string
+     */
+    protected function prepareQuoteUrl( \Jobs_JobStruct $job, $eq_word, \Projects_ProjectStruct $project, $service_type = ServiceTypes::SERVICE_TYPE_PROFESSIONAL ){
+
+        return "http://www.translated.net/hts/index.php?" . http_build_query( [
+                        'f'                => 'quote',
+                        'cid'              => $this->config[ 'translated_username' ],
+                        'p'                => $this->config[ 'translated_password' ],
+                        's'                => $job->source,
+                        't'                => $job->target,
+                        'pn'               => $project->name,
+                        'w'                => ( is_null( $eq_word ) ? 0 : $eq_word ),
+                        'df'               => 'matecat',
+                        'matecat_pid'      => $project->id,
+                        'matecat_ppass'    => $project->password,
+                        'matecat_pname'    => $project->name,
+                        'subject'          => $job->subject,
+                        'jt'               => $service_type,
+                        'fd'               => 0,
+                        'of'               => 'json',
+                        'matecat_raw'      => $job->total_raw_wc,
+                        'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
+                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] )
+                ], PHP_QUERY_RFC3986 );
+
+    }
+
+    /**
      * @see TMAnalysisWorker::_tryToCloseProject()
      *
      * @param $project_id
