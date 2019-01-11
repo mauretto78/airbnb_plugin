@@ -34,6 +34,8 @@ class Airbnb extends BaseFeature {
 
     const REFERENCE_QUOTE_METADATA_KEY = "append_to_pid";
 
+    const BATCH_WORD_COUNT_METADATA_KEY = "batch_word_count";
+
     public static $dependencies = [
 //            Features::TRANSLATION_VERSIONS,
 //            Features::REVIEW_EXTENDED
@@ -171,6 +173,63 @@ class Airbnb extends BaseFeature {
     }
 
     /**
+     * @param                         $urls
+     * @param \Projects_ProjectStruct $project
+     *
+     * @return string
+     */
+    protected function prepareConfirmUrl( $urls, \Projects_ProjectStruct $project ) {
+
+        return "http://www.translated.net/hts/index.php?" . http_build_query( [
+                        'f'                => 'confirm',
+                        'cid'              => $this->config[ 'translated_username' ],
+                        'p'                => $this->config[ 'translated_password' ],
+                        'pid'              => $this->external_project_id,
+                        'c'                => 1,
+                        'of'               => "json",
+                        'urls'             => json_encode( $urls ),
+                        'append_to_pid'    => ( !empty( $this->external_parent_project_id ) ? $this->external_parent_project_id : null ),
+                        'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
+                        'matecat_host'     => parse_url( \INIT::$HTTPHOST, PHP_URL_HOST ),
+                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] )
+                ], PHP_QUERY_RFC3986 );
+
+    }
+
+    /**
+     * @param \Jobs_JobStruct         $job
+     * @param                         $eq_word
+     * @param \Projects_ProjectStruct $project
+     * @param string                  $service_type
+     *
+     * @return string
+     */
+    protected function prepareQuoteUrl( \Jobs_JobStruct $job, $eq_word, \Projects_ProjectStruct $project, $service_type = ServiceTypes::SERVICE_TYPE_PROFESSIONAL ){
+
+        return "http://www.translated.net/hts/index.php?" . http_build_query( [
+                        'f'                => 'quote',
+                        'cid'              => $this->config[ 'translated_username' ],
+                        'p'                => $this->config[ 'translated_password' ],
+                        's'                => $job->source,
+                        't'                => $job->target,
+                        'pn'               => $project->name,
+                        'w'                => ( is_null( $eq_word ) ? 0 : $eq_word ),
+                        'df'               => 'matecat',
+                        'matecat_pid'      => $project->id,
+                        'matecat_ppass'    => $project->password,
+                        'matecat_pname'    => $project->name,
+                        'subject'          => $job->subject,
+                        'jt'               => $service_type,
+                        'fd'               => 0,
+                        'of'               => 'json',
+                        'matecat_raw'      => $job->total_raw_wc,
+                        'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
+                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] )
+                ], PHP_QUERY_RFC3986 );
+
+    }
+
+    /**
      * @see TMAnalysisWorker::_tryToCloseProject()
      *
      * @param $project_id
@@ -186,11 +245,16 @@ class Airbnb extends BaseFeature {
 
         if( !in_array( $projectStruct->id_customer, $internal_users ) ){
 
-            $metadataDao = new \Projects_MetadataDao();
-            $quote_pid_append = @$metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
+            $metadataDao            = new \Projects_MetadataDao();
+            $quote_pid_append       = @$metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
+            $total_batch_word_count = @$metadataDao->get( $project_id, Airbnb::BATCH_WORD_COUNT_METADATA_KEY )->value;
 
             if( !empty( $quote_pid_append ) ){
                 $this->setExternalParentProjectId( $quote_pid_append );
+            }
+
+            if( !empty( $total_batch_word_count ) ){
+                $this->setTotalBatchWordCount( $total_batch_word_count );
             }
 
             $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
@@ -232,6 +296,13 @@ class Airbnb extends BaseFeature {
             $metadata[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ];
         }
 
+        if ( isset( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
+            if ( !is_numeric( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
+                throw new \Exception( "Quote PID '{$__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
+            }
+            $metadata[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ];
+        }
+
         return $metadata;
     }
 
@@ -242,7 +313,8 @@ class Airbnb extends BaseFeature {
      * @return mixed
      */
     public function filterNewProjectInputFilters( $filter_args ) {
-        $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
+        $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]  = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
+        $filter_args[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         return $filter_args;
     }
 
