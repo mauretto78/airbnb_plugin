@@ -273,7 +273,7 @@ class Airbnb extends BaseFeature {
      *
      * @return \API\V2\JSON\ProjectUrls
      */
-    public function projectUrls( ProjectUrls $formatted ) {
+    public static function projectUrls( ProjectUrls $formatted ) {
         return $formatted;
     }
 
