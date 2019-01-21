@@ -10,7 +10,6 @@ namespace Features;
 
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
-use Engines\Traits\HotSwap;
 use Engines_AbstractEngine;
 use Engines_MMT;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
@@ -27,7 +26,7 @@ use TaskRunner\Exceptions\ReQueueException;
 
 class Airbnb extends BaseFeature {
 
-    use TranslatedTrait, HotSwap;
+    use TranslatedTrait;
 
     const FEATURE_CODE = "airbnb";
 
@@ -45,57 +44,6 @@ class Airbnb extends BaseFeature {
     public static function loadRoutes( Klein $klein ) {
         //route( '/job/[:id_job]/[:password]/sign_off', 'GET', 'Features\Airbnb\Controller\SignOffController', 'signedOffCallback' );
     }
-
-    /**
-     * Allow plugins to force to send requests to MMT even if in analysis
-     * @see Engines_MMT::get()
-     */
-//    public function forceMMTAcceptAnalysisRequests( $bool ){
-////        return true;
-//        return $bool; //false
-//    }
-
-    /**
-     * @see TMAnalysisWorker::_getMatches()
-     *
-     * @param                        $config
-     * @param Engines_AbstractEngine $engine
-     * @param QueueElement           $queueElement
-     *
-     * @return mixed
-     * @throws \Exception
-     */
-//    public function analysisBeforeMTGetContribution( $config, Engines_AbstractEngine $engine, QueueElement $queueElement ){
-//
-//        if( $engine instanceof Engines_MMT ){
-//
-//            $config[ 'keys' ] = array_values( $config[ 'id_user' ] );
-//            $mt_context = @array_pop( ( new MetadataDao() )->setCacheTTL( 60 * 60 * 24 * 30 )->getByIdJob( $queueElement->params->id_job, 'mt_context' ) );
-//            $config[ 'mt_context' ] = ( !empty( $mt_context ) ? $mt_context->value : "" );
-//            $config[ 'job_id' ] = $queueElement->params->id_job;
-//
-//        }
-//
-//        return $config;
-//    }
-
-    /**
-     * @see TMAnalysisWorker::_getMatches()
-     *
-     * @param QueueElement           $queueElement
-     *
-     * @param Engines_AbstractEngine $mt
-     *
-     * @throws ReQueueException
-     */
-//    public function handleMTAnalysisRetry( QueueElement $queueElement, Engines_AbstractEngine $mt ){
-//
-//        if( $mt instanceof Engines_MMT ){
-//            $queueElement->params->id_mt_engine = 1;
-//            throw new ReQueueException( "Error from MMT. Empty field received even if MT was requested.", TMAnalysisWorker::ERR_REQUEUE );
-//        }
-//
-//    }
 
     /**
      * @see \ProjectManager::_storeSegments()
@@ -161,17 +109,6 @@ class Airbnb extends BaseFeature {
         $segmentsList->id_after = null;
     }
 
-    /**
-     * @see \ProjectManager::_createJobs()
-     *
-     * @param \Jobs_JobStruct $jobStruct
-     *
-     * @throws \Predis\Connection\ConnectionException
-     * @throws \ReflectionException
-     */
-    public function beforeInsertJobStruct( \Jobs_JobStruct $jobStruct ){
-        $this->swapOn( $jobStruct );
-    }
 
     /**
      * @param                         $urls
@@ -263,8 +200,6 @@ class Airbnb extends BaseFeature {
             $this->requestProjectQuote( $projectStruct, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
 
         }
-
-        $this->swapOff( $project_id );
 
     }
 
