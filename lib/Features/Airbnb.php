@@ -21,6 +21,7 @@ use Features\Outsource\Constants\ServiceTypes;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
+use SubFiltering\Filters\HtmlToPhToLayer2;
 use TaskRunner\Commons\QueueElement;
 use TaskRunner\Exceptions\ReQueueException;
 
@@ -271,7 +272,7 @@ class Airbnb extends BaseFeature {
     }
 
     public function fromLayer0ToLayer2( Pipeline $channel ) {
-        $channel->addAfter( new HtmlToPh(), new Variables() );
+        $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
         return $channel;
     }
 
