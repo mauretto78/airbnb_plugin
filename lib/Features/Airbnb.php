@@ -10,20 +10,18 @@ namespace Features;
 
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
-use Engines_AbstractEngine;
-use Engines_MMT;
+use Exceptions\ValidationError;
+use Features;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
-use Klein\Klein;
-use \Features\Outsource\Traits\Translated as TranslatedTrait;
 use Features\Outsource\Constants\ServiceTypes;
+use Features\Outsource\Traits\Translated as TranslatedTrait;
+use Klein\Klein;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
 use SubFiltering\Filters\HtmlToPhToLayer2;
-use TaskRunner\Commons\QueueElement;
-use TaskRunner\Exceptions\ReQueueException;
 
 class Airbnb extends BaseFeature {
 
@@ -38,8 +36,8 @@ class Airbnb extends BaseFeature {
     const BATCH_WORD_COUNT_METADATA_KEY = "batch_word_count";
 
     public static $dependencies = [
-//            Features::TRANSLATION_VERSIONS,
-//            Features::REVIEW_EXTENDED
+        Features::TRANSLATION_VERSIONS,
+        Features::REVIEW_EXTENDED
     ];
 
     public static function loadRoutes( Klein $klein ) {
@@ -228,14 +226,14 @@ class Airbnb extends BaseFeature {
 
         if ( isset( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) ) {
             if ( !is_numeric( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) ) {
-                throw new \Exception( "Quote PID '{$__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
+                throw new ValidationError( "Quote PID '{$__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
             }
             $metadata[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ];
         }
 
         if ( isset( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
             if ( !is_numeric( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
-                throw new \Exception( "Quote PID '{$__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
+                throw new ValidationError( "Quote PID '{$__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
             }
             $metadata[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ];
         }
