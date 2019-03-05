@@ -127,7 +127,7 @@
                 notesHtml.push(html);
             }
             return notesHtml;
-        }
+        };
 
         var PLURAL_TYPES = {
 
@@ -146,7 +146,6 @@
                 "num_forms": 2,
 
                 "doc" : ["When count is 1", "Everything else (0, 2, 3, ...)"],
-
 
                 "rule" : "lambda { |n| n != 1 ? 1 : 0 }",
 
@@ -228,7 +227,118 @@
 
             },
 
-        }
+            "tagalog_like"  : {
+
+                "num_forms" : 2,
+
+                "doc" : [
+
+                    "When count ends in 0, 1, 2, 3, 5, 7, 8 (0~3, 5, 7, 8, 10~13, 15, ...)",
+
+                    "Everything else (4, 6, 9, 14, 16, 19, ...)"
+
+                ]
+            },
+
+            "latvian_like" : {
+
+                "num_forms" : 3,
+
+                "doc" : [
+
+                    "When count ends in 0 or 11~19 (0, 10~20, 30, 40, ...)",
+
+                    "When count ends in 1, excluding ending in 11 (1, 21, 31, ...)",
+
+                    "Everything else (2~9, 22~29, ...)"
+
+                ]
+            },
+
+            "lithuanian_like" : {
+
+                "num_forms" : 3,
+
+                "doc" : [
+
+                    "When count ends in 1, excluding ending in 11 (1, 21, 31, ...)",
+
+                    "When count ends in 2~9, excluding ending in 12~19 (2~9, 22~29, ...)",
+
+                    "Everything else (0, 10~20, 30, ...)"
+
+                ]
+            },
+
+            "romanian_like" : {
+
+                "num_forms" : 3,
+
+                "doc" : [
+
+                    "When count is 1 ",
+
+                    "When count is 0 or ends in 01~19 excluding 1 (0, 2~19, 101~119, ...)",
+
+                    "Everything else (20~100, 120~200, ...)"
+
+                ]
+            },
+
+            "maltese_like" : {
+
+                "num_forms" : 4,
+
+                "doc" : [
+
+                    "When count is 1 ",
+
+                    "When count is 0 or ends in 02~10 (0, 2~10, 102~110, ...)",
+
+                    "When count ends in 11~19 (11~19, 111~119, ...)",
+
+                    "Everything else (20~101, 120~201, ...)"
+
+                ]
+            },
+
+            "slovenian_like" : {
+
+                "num_forms" : 4,
+
+                "doc" : [
+
+                    "When count ends in 01 (1, 101, 201, ...)",
+
+                    "When count ends in 02 (2, 102, 202, ...) ",
+
+                    "When count ends in 03 or 04 (3, 4, 103, 104, 203, ...)",
+
+                    "Everything else (0, 5~100, 105~200, ...) "
+
+                ]
+            },
+
+            "irish_like" : {
+
+                "num_forms" : 5,
+
+                "doc" : [
+
+                    "When count is 1",
+
+                    "When count is 2",
+
+                    "When count is 3, 4, 5, 6",
+
+                    "When count is 7, 8, 9, 10",
+
+                    "Everything else (0, 11, 12, ...)"
+
+                ]
+            },
+
+        };
 
 
 
@@ -236,19 +346,33 @@
 
             "chinese_like" : ["id", "ja", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
 
-            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv"],
+            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "ka", "sw"],
 
-            "french_like" : ["fr", "tl"],
+            "french_like" : ["fr", "hy", "pt", "hi"],
 
-            "russian_like" : ["hr", "ru"],
+            "russian_like" : ["hr", "ru", "bs", "me", "sr", "uk"],
 
-            "czech_like" : ["cs"],
+            "czech_like" : ["cs", "sk"],
 
             "polish_like" : ["pl"],
 
-            "icelandic_like" : ["is"],
+            "latvian_like" : ["lv"],
+
+            "lithuanian_like" : ["lt"],
+
+            "icelandic_like" : ["is", "mk"],
 
             "arabic_like" : ["ar"],
+
+            "tagalog_like" : ["tl"],
+
+            "romanian_like" : ["ro"],
+
+            "maltese_like" : ["mt"],
+
+            "slovenian_like" : ["sl"],
+
+            "irish_like" : ["ga"]
 
         };
     }
