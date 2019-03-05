@@ -6,7 +6,7 @@
  * Time: 15:10
  */
 
-namespace Features\Microsoft\Model\Analysis;
+namespace Features\Airbnb\Model\Analysis;
 
 
 class CustomPayableRates extends \Analysis_PayableRates {

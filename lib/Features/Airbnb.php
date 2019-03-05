@@ -10,23 +10,22 @@ namespace Features;
 
 use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
-use Contribution\ContributionStruct;
-use Engines\Traits\HotSwap;
-use Engines_AbstractEngine;
-use Engines_MMT;
+use Exceptions\ValidationError;
+use Features;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
-use Klein\Klein;
-use Features;
-use \Features\Outsource\Traits\Translated as TranslatedTrait;
+use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Features\Outsource\Constants\ServiceTypes;
+use Features\Outsource\Traits\Translated as TranslatedTrait;
+use Klein\Klein;
 use Segments_SegmentStruct;
-use TaskRunner\Commons\QueueElement;
-use TaskRunner\Exceptions\ReQueueException;
+use SubFiltering\Commons\Pipeline;
+use SubFiltering\Filters\HtmlToPh;
+use SubFiltering\Filters\HtmlToPhToLayer2;
 
 class Airbnb extends BaseFeature {
 
-    use TranslatedTrait, HotSwap;
+    use TranslatedTrait;
 
     const FEATURE_CODE = "airbnb";
 
@@ -37,64 +36,13 @@ class Airbnb extends BaseFeature {
     const BATCH_WORD_COUNT_METADATA_KEY = "batch_word_count";
 
     public static $dependencies = [
-//            Features::TRANSLATION_VERSIONS,
-//            Features::REVIEW_EXTENDED
+        Features::TRANSLATION_VERSIONS,
+        Features::REVIEW_EXTENDED
     ];
 
     public static function loadRoutes( Klein $klein ) {
         //route( '/job/[:id_job]/[:password]/sign_off', 'GET', 'Features\Airbnb\Controller\SignOffController', 'signedOffCallback' );
     }
-
-    /**
-     * Allow plugins to force to send requests to MMT even if in analysis
-     * @see Engines_MMT::get()
-     */
-//    public function forceMMTAcceptAnalysisRequests( $bool ){
-////        return true;
-//        return $bool; //false
-//    }
-
-    /**
-     * @see TMAnalysisWorker::_getMatches()
-     *
-     * @param                        $config
-     * @param Engines_AbstractEngine $engine
-     * @param QueueElement           $queueElement
-     *
-     * @return mixed
-     * @throws \Exception
-     */
-//    public function analysisBeforeMTGetContribution( $config, Engines_AbstractEngine $engine, QueueElement $queueElement ){
-//
-//        if( $engine instanceof Engines_MMT ){
-//
-//            $config[ 'keys' ] = array_values( $config[ 'id_user' ] );
-//            $mt_context = @array_pop( ( new MetadataDao() )->setCacheTTL( 60 * 60 * 24 * 30 )->getByIdJob( $queueElement->params->id_job, 'mt_context' ) );
-//            $config[ 'mt_context' ] = ( !empty( $mt_context ) ? $mt_context->value : "" );
-//            $config[ 'job_id' ] = $queueElement->params->id_job;
-//
-//        }
-//
-//        return $config;
-//    }
-
-    /**
-     * @see TMAnalysisWorker::_getMatches()
-     *
-     * @param QueueElement           $queueElement
-     *
-     * @param Engines_AbstractEngine $mt
-     *
-     * @throws ReQueueException
-     */
-//    public function handleMTAnalysisRetry( QueueElement $queueElement, Engines_AbstractEngine $mt ){
-//
-//        if( $mt instanceof Engines_MMT ){
-//            $queueElement->params->id_mt_engine = 1;
-//            throw new ReQueueException( "Error from MMT. Empty field received even if MT was requested.", TMAnalysisWorker::ERR_REQUEUE );
-//        }
-//
-//    }
 
     /**
      * @see \ProjectManager::_storeSegments()
@@ -160,17 +108,6 @@ class Airbnb extends BaseFeature {
         $segmentsList->id_after = null;
     }
 
-    /**
-     * @see \ProjectManager::_createJobs()
-     *
-     * @param \Jobs_JobStruct $jobStruct
-     *
-     * @throws \Predis\Connection\ConnectionException
-     * @throws \ReflectionException
-     */
-    public function beforeInsertJobStruct( \Jobs_JobStruct $jobStruct ){
-        $this->swapOn( $jobStruct );
-    }
 
     /**
      * @param                         $urls
@@ -263,8 +200,6 @@ class Airbnb extends BaseFeature {
 
         }
 
-        $this->swapOff( $project_id );
-
     }
 
     /**
@@ -291,14 +226,14 @@ class Airbnb extends BaseFeature {
 
         if ( isset( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) ) {
             if ( !is_numeric( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) ) {
-                throw new \Exception( "Quote PID '{$__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
+                throw new ValidationError( "Quote PID '{$__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
             }
             $metadata[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ];
         }
 
         if ( isset( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
             if ( !is_numeric( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
-                throw new \Exception( "Quote PID '{$__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
+                throw new ValidationError( "Quote PID '{$__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
             }
             $metadata[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ];
         }
@@ -327,6 +262,28 @@ class Airbnb extends BaseFeature {
         //override Revise Improved qa Model
         $qa_mode_file = realpath( self::getPluginBasePath() . "/../qa_model.json" );
         ReviewExtended::loadAndValidateModelFromJsonFile( $projectStructure, $qa_mode_file );
+    }
+
+    public function fromLayer0ToLayer1( Pipeline $channel ) {
+        $channel->addAfter( new HtmlToPh(), new Variables() );
+        return $channel;
+    }
+
+    public function fromLayer0ToLayer2( Pipeline $channel ) {
+        $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
+        return $channel;
+    }
+
+    public function checkTagMismatch( $errorType, \QA $QA ){
+        if( strpos( $QA->getSourceSeg(), "|||" ) !== false ){
+            $QA->addCustomError( [
+                    'code'  => 2000,
+                    'debug' => 'Smart Count variable missing',
+                    'tip'   => 'Check your language specific configuration.'
+            ] );
+            return 2000;
+        }
+        return $errorType;
     }
 
 }
