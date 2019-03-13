@@ -12,40 +12,34 @@ use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
 use API\V2\Validators\JobPasswordValidator;
 use Chunks_ChunkStruct;
+use Exception;
+use Features\TranslationVersions\Model\SegmentTranslationEventDao;
+use INIT;
+use Log;
+use MultiCurlHandler;
+use Routes;
 use SimpleJWT;
+use Translations_SegmentTranslationDao;
 
 class SegmentDeliveryController extends KleinController {
 
     /** @var  Chunks_ChunkStruct */
     protected $chunk ;
 
-
-    /**
-     * dobbiamo fare in modo che se si apre un altro link di MateCat non ci siano problemi.
-     *
-     * - validare la chiamata con una secret key
-     * - settare un cookie _aibnb_sd_[id_job]
-     *
-     * in questo modo sappiamo per quali job attivare la funzione.
-     * mettere una scadenza molto rapida per il cookie in modo che non ci dobbiamo
-     * preoccupare di pulire i cookie quando il numero di job cresce.
-     *
-     */
     public function startSession() {
         $expire   = strtotime('+1 hours');
-        $redirect = $this->request->param('redirect_url') ;
 
         $jwt = new SimpleJWT(['id_job' => $this->chunk->id ] );
         $signed = $jwt->jsonSerialize();
 
         setcookie( 'airbnb_session_' . $this->request->param('id_job'), $signed, $expire, '/' ) ;
 
-        if ( !$redirect ) {
-            $this->response->code( 201 ) ;
-        }
-        else {
-            $this->response->redirect( $redirect ) ;
-        }
+        $project = $this->chunk->getProject();
+        $redirect_url = Routes::translate(
+                $project->name, $this->chunk->id, $this->chunk->password, $this->chunk->source, $this->chunk->target
+        ) ;
+
+       $this->response->redirect( $redirect_url . '#' . $this->request->param('id_segment') ) ;
     }
 
     protected function afterConstruct() {

@@ -43,7 +43,8 @@ class Airbnb extends BaseFeature {
     ];
 
     public static function loadRoutes( Klein $klein ) {
-        route( '/job/[:id_job]/[:password]/segment_delivery/session', 'GET', 'Features\Airbnb\Controller\SegmentDeliveryController', 'startSession' );
+        route( '/job/[:id_job]/[:password]/segment_delivery/[:id_segment]/session', 'GET', 'Features\Airbnb\Controller\SegmentDeliveryController', 'startSession' );
+        route( '/job/[:id_job]/[:password]/segment_delivery', 'POST', 'Features\Airbnb\Controller\SegmentDeliveryController', 'send' );
     }
 
     /**

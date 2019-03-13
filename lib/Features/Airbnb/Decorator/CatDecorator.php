@@ -14,10 +14,6 @@ class CatDecorator extends AbstractCatDecorator {
     protected $template;
 
     public function decorate() {
-        // read cookies, find airbnb_session cookies
-        // validate cookie content
-        // in case validation is ok then add variables to the config,
-        // variables should include  a URL template to allow browser to make calls
         $this->_checkSessionCookie();
 
         $this->template->append( 'footer_js', Routes::staticBuild( '/airbnb-core-build.js' ) );
