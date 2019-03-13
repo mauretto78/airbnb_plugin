@@ -35,13 +35,15 @@ class Airbnb extends BaseFeature {
 
     const BATCH_WORD_COUNT_METADATA_KEY = "batch_word_count";
 
+    const DELIVERY_COOKIE_PREFIX ='airbnb_session_'  ;
+
     public static $dependencies = [
         Features::TRANSLATION_VERSIONS,
         Features::REVIEW_EXTENDED
     ];
 
     public static function loadRoutes( Klein $klein ) {
-        //route( '/job/[:id_job]/[:password]/sign_off', 'GET', 'Features\Airbnb\Controller\SignOffController', 'signedOffCallback' );
+        route( '/job/[:id_job]/[:password]/segment_delivery/session', 'GET', 'Features\Airbnb\Controller\SegmentDeliveryController', 'startSession' );
     }
 
     /**
