@@ -27,10 +27,10 @@ class SegmentDeliveryController extends KleinController {
     protected $chunk ;
 
     public function startSession() {
-        $expire   = strtotime('+1 hours');
 
         $jwt = new SimpleJWT(['id_job' => $this->chunk->id ] );
         $signed = $jwt->jsonSerialize();
+        $expire = strtotime('+5 minutes');
 
         setcookie( 'airbnb_session_' . $this->request->param('id_job'), $signed, $expire, '/' ) ;
 
