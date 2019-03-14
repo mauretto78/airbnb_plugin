@@ -11,3 +11,34 @@
 .cattool #quality-report {
   display: block;
 }
+
+section {
+  .buttons {
+      .deliver {
+          border: 1px solid #797979;
+          color: #fff !important;
+          font-weight: bold;
+          text-decoration: none;
+          padding: 8px 18px;
+          border-radius: 2px;
+          font-size: 18px;
+          background: #4FB486;
+          text-transform: uppercase;
+          user-select: none;
+          margin-left: 20px;
+          &.disabled {
+              pointer-events: none;
+              color: #666 !important;
+              border-color: #666;
+              background: #efefef;
+          }
+          &:hover {
+              cursor: pointer;
+              -webkit-box-shadow: 0 1px 2px #ccc;
+              box-shadow: 0 1px 2px #ccc;
+              border: 1px solid #000;
+          }
+      }
+
+  }
+}

@@ -2,7 +2,27 @@
 
 
 (function() {
+    config.pluggable.airbnb_delivery_button = 1;
+    $(document).on('setTranslation:success', function(e, data) {
+        let segment = data.segment;
+        $('.buttons .deliver', segment).removeClass('disabled');
+        sessionStorage.setItem("segToDeliver" + UI.getSegmentId(segment), 1);
+    });
+
+    $(document).on('click', 'section .buttons .deliver',  function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const segment = $(e.target).closest('section');
+        const idSeg = segment.data('segmentid');
+        alert('Segment ' + idSeg + ' delivered');
+        $('.buttons .deliver', segment).addClass('disabled');
+        sessionStorage.setItem("segToDeliver" + idSeg, 0);
+        return false;
+    });
+
     var originalRegisterFooterTabs = UI.registerFooterTabs;
+    var originalCreateButtons = UI.createButtons;
+    var originalgoToNextSegment = UI.gotoNextSegment;
     $.extend(UI, {
         registerFooterTabs: function () {
             originalRegisterFooterTabs.apply(this);
@@ -73,6 +93,45 @@
             var segmentAfterId = UI.getSegmentId(segmentAfter);
             return segmentAfterId;
         },
+        createButtons: function() {
+            if ( config.pluggable.airbnb_delivery_button ) {
+                var button_label = config.status_labels.TRANSLATED;
+                var deliver, currentButton;
+
+                var disabled = (this.currentSegment.hasClass( 'loaded' )) ? '' : ' disabled="disabled"';
+
+                const deliveryDisabled = (sessionStorage.getItem('segToDeliver' + this.currentSegmentId) === "1") ? '' : 'disabled';
+
+                deliver = '<li><a draggable="false" id="segment-' + this.currentSegmentId +
+                    '-button-deliver" data-segmentid="'+this.currentSegmentId+'"' +
+                    ' href="#" class="deliver '+ deliveryDisabled +'">DELIVER</a></li>';
+                currentButton = '<li><a draggable="false" id="segment-' + this.currentSegmentId +
+                    '-button-translated" data-segmentid="segment-' + this.currentSegmentId +
+                    '" href="#" class="translated"' + disabled + ' >' + button_label + '</a><p>' +
+                    ((UI.isMac) ? 'CMD' : 'CTRL') + '+ENTER</p></li>';
+
+
+                UI.segmentButtons = currentButton + deliver;
+
+                var buttonsOb = $( '#segment-' + this.currentSegmentId + '-buttons' );
+
+                UI.currentSegment.trigger( 'buttonsCreation' );
+
+                buttonsOb.empty().append( UI.segmentButtons );
+                buttonsOb.before( '<p class="warnings"></p>' );
+
+                UI.segmentButtons = null;
+            } else {
+                originalCreateButtons.apply(this, arguments);
+            }
+        },
+        gotoNextSegment: function (  ) {
+            if ( config.pluggable.airbnb_delivery_button ) {
+                return false
+            } else {
+                originalgoToNextSegment.apply(this, arguments);
+            }
+        }
     });
     function overrideTabMessages( SegmentTabMessages ) {
         SegmentTabMessages.prototype.getNotes = function (  ) {
@@ -436,13 +495,7 @@
             return false;
         }
     }
-    
     overrideTabMessages(SegmentTabMessages);
     overrideGetMessages(SegmentsContainer);
     overrideSetDefaultTabOpen(SegmentFooter);
-
-
-
-
-
 })() ;
