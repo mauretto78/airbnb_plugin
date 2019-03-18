@@ -344,7 +344,7 @@
 
         var PLURAL_TYPE_NAME_TO_LANGUAGES = {
 
-            "chinese_like" : ["az", "id", "ja", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
+            "chinese_like" : ["az", "id", "ja", "ka", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
 
             "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "ka", "sw"],
 
