@@ -10,13 +10,7 @@ namespace Features\Airbnb\Controller;
 
 use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
-use API\V2\Validators\JobPasswordValidator;
 use Chunks_ChunkStruct;
-use Exception;
-use Features\TranslationVersions\Model\SegmentTranslationEventDao;
-use INIT;
-use Log;
-use MultiCurlHandler;
 use Routes;
 use SimpleJWT;
 use Translations_SegmentTranslationDao;
@@ -38,8 +32,21 @@ class SegmentDeliveryController extends KleinController {
         $redirect_url = Routes::translate(
                 $project->name, $this->chunk->id, $this->chunk->password, $this->chunk->source, $this->chunk->target
         ) ;
+        $this->response->header('Cache-Control', 'max-age=0');
+        $this->response->redirect( $redirect_url . '#' . $this->request->param('id_segment') ) ;
+    }
 
-       $this->response->redirect( $redirect_url . '#' . $this->request->param('id_segment') ) ;
+    public function send(  ) {
+        $segment = Translations_SegmentTranslationDao::findBySegmentAndJob($this->request->param('id_segment'), $this->chunk->id);
+        $this->response->json([
+            'translation' => $segment->translation
+        ]);
+        return $this;
+    }
+
+    public function setChunk( Chunks_ChunkStruct $chunk ) {
+        $this->chunk = $chunk ;
+        return $this;
     }
 
     protected function afterConstruct() {
@@ -53,9 +60,5 @@ class SegmentDeliveryController extends KleinController {
         $this->appendValidator( $validator );
     }
 
-    public function setChunk( Chunks_ChunkStruct $chunk ) {
-        $this->chunk = $chunk ;
-        return $this;
-    }
 }
 

@@ -2,27 +2,68 @@
 
 
 (function() {
-    config.pluggable.airbnb_delivery_button = 1;
-    $(document).on('setTranslation:success', function(e, data) {
-        let segment = data.segment;
-        $('.buttons .deliver', segment).removeClass('disabled');
-        sessionStorage.setItem("segToDeliver" + UI.getSegmentId(segment), 1);
-    });
+    var deliveryEnabled = (config.pluggable && config.pluggable.airbnb_delivery_button);
+    if ( deliveryEnabled ) {
+        $(document).on('setTranslation:success', function(e, data) {
+            let segment = data.segment;
+            $('.buttons .deliver', segment).removeClass('disabled');
+            sessionStorage.setItem("segToDeliver" + UI.getSegmentId(segment), 1);
+            UI.blockButtons = false;
+        });
 
-    $(document).on('click', 'section .buttons .deliver',  function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const segment = $(e.target).closest('section');
-        const idSeg = segment.data('segmentid');
-        alert('Segment ' + idSeg + ' delivered');
-        $('.buttons .deliver', segment).addClass('disabled');
-        sessionStorage.setItem("segToDeliver" + idSeg, 0);
-        return false;
-    });
+        $(document).on('click', 'section .buttons .deliver',  function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const segment = $(e.target).closest('section');
+            const idSeg = $(e.target).data('segmentid');
+            $('.buttons .deliver', segment).addClass('disabled');
+            sessionStorage.setItem("segToDeliver" + idSeg, 0);
+            let editAreaClone = UI.getEditAreaBySegmentId(idSeg).clone();
+            editAreaClone.find('.tag-html-container-open, .tag-html-container-close').remove()
+            const translation = editAreaClone.text();
+
+            $.ajax({
+                data: {
+                    id_segment: idSeg
+                },
+                type: 'post',
+                url : '/plugins/airbnb/job/'+ config.id_job +'/'+ config.password +'/segment_delivery',
+            }).done((response)=>{
+                var notification = {
+                    title: 'Segment delivered',
+                    text: 'Segment ' + idSeg + ' was delivered.',
+                    type: 'success',
+                    position: 'bl',
+                    allowHtml: true,
+                    autoDismiss: true,
+                };
+                APP.addNotification(notification);
+                if ( window.opener ) {
+                    window.opener.postMessage({
+                        name: 'segmentTranslationChange',
+                        idSegment: toString(idSeg),
+                        translation: response.translation
+                    }, '*');
+                }
+            }).fail(()=>{
+                var notification = {
+                    title: 'Segment not delivered',
+                    text: 'Oops we got an Error. Please, contact <a href="mailto:support@matecat.com">support@matecat.com</a>.',
+                    type: 'error',
+                    position: 'bl',
+                    allowHtml: true,
+                    autoDismiss: true,
+                };
+                APP.addNotification(notification);
+            });
+            return false;
+        });
+    }
 
     var originalRegisterFooterTabs = UI.registerFooterTabs;
     var originalCreateButtons = UI.createButtons;
     var originalgoToNextSegment = UI.gotoNextSegment;
+    var originalInputEditAreaEventHandler = UI.inputEditAreaEventHandler;
     $.extend(UI, {
         registerFooterTabs: function () {
             originalRegisterFooterTabs.apply(this);
@@ -94,7 +135,7 @@
             return segmentAfterId;
         },
         createButtons: function() {
-            if ( config.pluggable.airbnb_delivery_button ) {
+            if ( deliveryEnabled ) {
                 var button_label = config.status_labels.TRANSLATED;
                 var deliver, currentButton;
 
@@ -125,8 +166,14 @@
                 originalCreateButtons.apply(this, arguments);
             }
         },
+        inputEditAreaEventHandler: function() {
+            if ( deliveryEnabled ) {
+                $('.buttons .deliver', UI.currentSegment).addClass('disabled');
+            }
+            originalInputEditAreaEventHandler.apply(this, arguments);
+        },
         gotoNextSegment: function (  ) {
-            if ( config.pluggable.airbnb_delivery_button ) {
+            if ( deliveryEnabled ) {
                 return false
             } else {
                 originalgoToNextSegment.apply(this, arguments);
