@@ -8,12 +8,16 @@
 
 namespace Features\Airbnb\Controller;
 
+use ActivityLog\Activity;
+use ActivityLog\ActivityLogStruct;
 use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
 use Chunks_ChunkStruct;
+use Constants_JobStatus;
 use Routes;
 use SimpleJWT;
 use Translations_SegmentTranslationDao;
+use Utils;
 
 class SegmentDeliveryController extends KleinController {
 
@@ -27,6 +31,10 @@ class SegmentDeliveryController extends KleinController {
         $expire = strtotime('+5 minutes');
 
         setcookie( 'airbnb_session_' . $this->request->param('id_job'), $signed, $expire, '/' ) ;
+
+        $this->_saveActivity();
+
+        updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
 
         $project = $this->chunk->getProject();
         $redirect_url = Routes::translate(
@@ -60,5 +68,15 @@ class SegmentDeliveryController extends KleinController {
         $this->appendValidator( $validator );
     }
 
+    protected function _saveActivity() {
+        $activity             = new ActivityLogStruct();
+        $activity->id_job     = $this->chunk->id;
+        $activity->id_project = $this->chunk->id_project;
+        $activity->action     = ActivityLogStruct::JOB_UNARCHIVED;
+        $activity->ip         = Utils::getRealIpAddr();
+        $activity->uid        = $this->user->uid;
+        $activity->event_date = date( 'Y-m-d H:i:s' );
+        Activity::save( $activity );
+    }
 }
 
