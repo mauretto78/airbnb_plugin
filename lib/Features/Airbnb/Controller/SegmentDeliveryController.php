@@ -15,6 +15,9 @@ use API\V2\Validators\ChunkPasswordValidator;
 use Chunks_ChunkStruct;
 use Constants_JobStatus;
 use Routes;
+use Segments_SegmentDao;
+use Segments_SegmentNoteDao;
+use Segments_SegmentNoteStruct;
 use SimpleJWT;
 use Translations_SegmentTranslationDao;
 use Utils;
@@ -44,11 +47,28 @@ class SegmentDeliveryController extends KleinController {
         $this->response->redirect( $redirect_url . '#' . $this->request->param('id_segment') ) ;
     }
 
-    public function send(  ) {
-        $segment = Translations_SegmentTranslationDao::findBySegmentAndJob($this->request->param('id_segment'), $this->chunk->id);
+    public function send() {
+        $segment_translation = Translations_SegmentTranslationDao::findBySegmentAndJob($this->request->param('id_segment'), $this->chunk->id);
+        // rebuild the trans-unit and post to the external API
+
+        $segment = ( new Segments_SegmentDao() )->getById( $segment_translation->id_segment ) ;
+        $notes   = array_map( function ( Segments_SegmentNoteStruct $note ) {
+            return $note->note ;
+        }, Segments_SegmentNoteDao::getBySegmentId( $segment->id ) );
+
+        $postableData = [
+                'trans-unit-id' => $segment->internal_id,
+                'source'        => $segment->segment ,
+                'target'        => $segment_translation->translation,
+                'notes'         => $notes,
+                'source_lang'   => $this->chunk->source,
+                'target_lang'   => $this->chunk->target
+                ] ;
+
         $this->response->json([
-            'translation' => $segment->translation
+            'translation' => $segment_translation->translation
         ]);
+
         return $this;
     }
 
