@@ -35,9 +35,10 @@ class SegmentDeliveryController extends KleinController {
 
         setcookie( 'airbnb_session_' . $this->request->param('id_job'), $signed, $expire, '/' ) ;
 
-        $this->_saveActivity();
-
-        updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
+        if ( $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
+            updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
+            $this->_saveActivity();
+        }
 
         $project = $this->chunk->getProject();
         $redirect_url = Routes::translate(
