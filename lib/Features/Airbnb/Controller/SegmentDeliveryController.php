@@ -14,6 +14,7 @@ use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
 use Chunks_ChunkStruct;
 use Constants_JobStatus;
+use Features\Airbnb;
 use Routes;
 use Segments_SegmentDao;
 use Segments_SegmentNoteDao;
@@ -29,16 +30,20 @@ class SegmentDeliveryController extends KleinController {
 
     public function startSession() {
 
-        $jwt = new SimpleJWT(['id_job' => $this->chunk->id ] );
+        $jwt = new SimpleJWT( [
+                'id_job' => $this->chunk->id,
+                'ontool' => $this->request->param('ontool')
+        ] );
+
         $signed = $jwt->jsonSerialize();
         $expire = strtotime('+5 minutes');
-
-        setcookie( 'airbnb_session_' . $this->request->param('id_job'), $signed, $expire, '/' ) ;
+        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param('id_job'), $signed, $expire, '/' ) ;
 
         if ( $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
             updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
             $this->_saveActivity();
         }
+
 
         $project = $this->chunk->getProject();
         $redirect_url = Routes::translate(

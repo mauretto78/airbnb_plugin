@@ -32,7 +32,7 @@ class CatDecorator extends AbstractCatDecorator {
 
         if ( $payload['id_job'] == $chunk->id ) {
             $this->template->append('config_js', [
-                    'airbnb_delivery_button' => 1
+                    'airbnb_ontool' => $payload['ontool']
             ] );
         }
     }
