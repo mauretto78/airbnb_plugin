@@ -27,7 +27,7 @@ section {
           user-select: none;
           margin-left: 20px;
           &.disabled {
-              pointer-events: none;
+              cursor: default !important;
               color: #666 !important;
               border-color: #666;
               background: #efefef;
@@ -41,4 +41,18 @@ section {
       }
 
   }
+}
+
+.matecat-modal-content {
+    .boxed {
+        padding: 5px 30px 0;
+            label {
+                position: relative;
+                top: -4px;
+                margin-left: 5px;
+                    input {
+                        float: left;
+                    }
+            }
+    }
 }

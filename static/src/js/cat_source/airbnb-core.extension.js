@@ -1,9 +1,8 @@
-
-
-
+const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal').default ;
 (function() {
-    var deliveryEnabled = (config.pluggable && config.pluggable.airbnb_delivery_button);
-    if ( deliveryEnabled ) {
+    const showDelivery = ( config.pluggable && !_.isUndefined(config.pluggable.airbnb_ontool) );
+    const deliveryEnabled = ( config.pluggable && config.pluggable.airbnb_ontool === '1' );
+    if ( showDelivery && deliveryEnabled ) {
         $(document).on('setTranslation:success', function(e, data) {
             let segment = data.segment;
             $('.buttons .deliver', segment).removeClass('disabled');
@@ -14,13 +13,11 @@
         $(document).on('click', 'section .buttons .deliver',  function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if ( $(e.target).hasClass('disabled') )return;
             const segment = $(e.target).closest('section');
             const idSeg = $(e.target).data('segmentid');
             $('.buttons .deliver', segment).addClass('disabled');
             sessionStorage.setItem("segToDeliver" + idSeg, 0);
-            let editAreaClone = UI.getEditAreaBySegmentId(idSeg).clone();
-            editAreaClone.find('.tag-html-container-open, .tag-html-container-close').remove()
-            const translation = editAreaClone.text();
 
             $.ajax({
                 data: {
@@ -58,6 +55,18 @@
             });
             return false;
         });
+    } else if ( showDelivery && !deliveryEnabled ) {
+        $(document).on('click', 'section .buttons .deliver',  function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            UI.openSegmentDeliveryModal();
+        });
+        $(document).on('files:appended', function () {
+            let cookie = Cookies.get('segment_delivery_modal_hide');
+            if ( cookie !== '1') {
+                UI.openSegmentDeliveryModal();
+            }
+        });
     }
 
     var originalRegisterFooterTabs = UI.registerFooterTabs;
@@ -65,6 +74,13 @@
     var originalgoToNextSegment = UI.gotoNextSegment;
     var originalInputEditAreaEventHandler = UI.inputEditAreaEventHandler;
     $.extend(UI, {
+        openSegmentDeliveryModal: function() {
+            const props ={
+                modalName: 'segmentDeliveryModal',
+                text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+            };
+            APP.ModalWindow.showModalComponent(SegmentDeliveryModal, props, "Segment delivery");
+        },
         registerFooterTabs: function () {
             originalRegisterFooterTabs.apply(this);
             SegmentActions.registerTab('messages', true, true);
@@ -135,7 +151,7 @@
             return segmentAfterId;
         },
         createButtons: function() {
-            if ( deliveryEnabled ) {
+            if ( showDelivery ) {
                 var button_label = config.status_labels.TRANSLATED;
                 var deliver, currentButton;
 
