@@ -77,7 +77,8 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         openSegmentDeliveryModal: function() {
             const props ={
                 modalName: 'segmentDeliveryModal',
-                text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+                text: 'This is an off-tool project. The segment delivery feature is disabled in Matecat. ' +
+                    'You will have to deliver the whole project following the off-tool delivery procedure'
             };
             APP.ModalWindow.showModalComponent(SegmentDeliveryModal, props, "Segment delivery");
         },
