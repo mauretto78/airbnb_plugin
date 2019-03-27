@@ -1,9 +1,86 @@
-
-
-
+const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal').default ;
 (function() {
+    const showDelivery = ( config.pluggable && !_.isUndefined(config.pluggable.airbnb_ontool) );
+    const deliveryEnabled = ( config.pluggable && config.pluggable.airbnb_ontool === '1' );
+    if ( showDelivery && deliveryEnabled ) {
+        $(document).on('setTranslation:success', function(e, data) {
+            let segment = data.segment;
+            $('.buttons .deliver', segment).removeClass('disabled');
+            sessionStorage.setItem("segToDeliver" + UI.getSegmentId(segment), 1);
+            UI.blockButtons = false;
+        });
+
+        $(document).on('click', 'section .buttons .deliver',  function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if ( $(e.target).hasClass('disabled') )return;
+            const segment = $(e.target).closest('section');
+            const idSeg = $(e.target).data('segmentid');
+            $('.buttons .deliver', segment).addClass('disabled');
+            sessionStorage.setItem("segToDeliver" + idSeg, 0);
+
+            $.ajax({
+                data: {
+                    id_segment: idSeg
+                },
+                type: 'post',
+                url : '/plugins/airbnb/job/'+ config.id_job +'/'+ config.password +'/segment_delivery',
+            }).done((response)=>{
+                var notification = {
+                    title: 'Segment delivered',
+                    text: 'Segment ' + idSeg + ' was delivered.',
+                    type: 'success',
+                    position: 'bl',
+                    allowHtml: true,
+                    autoDismiss: true,
+                };
+                APP.addNotification(notification);
+                if ( window.opener ) {
+                    window.opener.postMessage({
+                        name: 'segmentTranslationChange',
+                        idSegment: toString(idSeg),
+                        translation: response.translation
+                    }, '*');
+                }
+            }).fail(()=>{
+                var notification = {
+                    title: 'Segment not delivered',
+                    text: 'Oops we got an Error. Please, contact <a href="mailto:support@matecat.com">support@matecat.com</a>.',
+                    type: 'error',
+                    position: 'bl',
+                    allowHtml: true,
+                    autoDismiss: true,
+                };
+                APP.addNotification(notification);
+            });
+            return false;
+        });
+    } else if ( showDelivery && !deliveryEnabled ) {
+        $(document).on('click', 'section .buttons .deliver',  function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            UI.openSegmentDeliveryModal();
+        });
+        $(document).on('files:appended', function () {
+            let cookie = Cookies.get('segment_delivery_modal_hide');
+            if ( cookie !== '1') {
+                UI.openSegmentDeliveryModal();
+            }
+        });
+    }
+
     var originalRegisterFooterTabs = UI.registerFooterTabs;
+    var originalCreateButtons = UI.createButtons;
+    var originalgoToNextSegment = UI.gotoNextSegment;
+    var originalInputEditAreaEventHandler = UI.inputEditAreaEventHandler;
     $.extend(UI, {
+        openSegmentDeliveryModal: function() {
+            const props ={
+                modalName: 'segmentDeliveryModal',
+                text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+            };
+            APP.ModalWindow.showModalComponent(SegmentDeliveryModal, props, "Segment delivery");
+        },
         registerFooterTabs: function () {
             originalRegisterFooterTabs.apply(this);
             SegmentActions.registerTab('messages', true, true);
@@ -73,6 +150,51 @@
             var segmentAfterId = UI.getSegmentId(segmentAfter);
             return segmentAfterId;
         },
+        createButtons: function() {
+            if ( showDelivery ) {
+                var button_label = config.status_labels.TRANSLATED;
+                var deliver, currentButton;
+
+                var disabled = (this.currentSegment.hasClass( 'loaded' )) ? '' : ' disabled="disabled"';
+
+                const deliveryDisabled = (sessionStorage.getItem('segToDeliver' + this.currentSegmentId) === "1") ? '' : 'disabled';
+
+                deliver = '<li><a draggable="false" id="segment-' + this.currentSegmentId +
+                    '-button-deliver" data-segmentid="'+this.currentSegmentId+'"' +
+                    ' href="#" class="deliver '+ deliveryDisabled +'">DELIVER</a></li>';
+                currentButton = '<li><a draggable="false" id="segment-' + this.currentSegmentId +
+                    '-button-translated" data-segmentid="segment-' + this.currentSegmentId +
+                    '" href="#" class="translated"' + disabled + ' >' + button_label + '</a><p>' +
+                    ((UI.isMac) ? 'CMD' : 'CTRL') + '+ENTER</p></li>';
+
+
+                UI.segmentButtons = currentButton + deliver;
+
+                var buttonsOb = $( '#segment-' + this.currentSegmentId + '-buttons' );
+
+                UI.currentSegment.trigger( 'buttonsCreation' );
+
+                buttonsOb.empty().append( UI.segmentButtons );
+                buttonsOb.before( '<p class="warnings"></p>' );
+
+                UI.segmentButtons = null;
+            } else {
+                originalCreateButtons.apply(this, arguments);
+            }
+        },
+        inputEditAreaEventHandler: function() {
+            if ( deliveryEnabled ) {
+                $('.buttons .deliver', UI.currentSegment).addClass('disabled');
+            }
+            originalInputEditAreaEventHandler.apply(this, arguments);
+        },
+        gotoNextSegment: function (  ) {
+            if ( deliveryEnabled ) {
+                return false
+            } else {
+                originalgoToNextSegment.apply(this, arguments);
+            }
+        }
     });
     function overrideTabMessages( SegmentTabMessages ) {
         SegmentTabMessages.prototype.getNotes = function (  ) {
@@ -436,13 +558,7 @@
             return false;
         }
     }
-    
     overrideTabMessages(SegmentTabMessages);
     overrideGetMessages(SegmentsContainer);
     overrideSetDefaultTabOpen(SegmentFooter);
-
-
-
-
-
 })() ;
