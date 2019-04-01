@@ -39,7 +39,7 @@ class SegmentDeliveryController extends KleinController {
         $expire = strtotime('+5 minutes');
         setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param('id_job'), $signed, $expire, '/' ) ;
 
-        if ( $this->chunk->isArchiveable() || $this->chunk->isArchived() ) {
+        if ( $this->chunk->isArchiveable() || $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
             updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
             $this->_saveActivity();
         }
