@@ -77,7 +77,8 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         openSegmentDeliveryModal: function() {
             const props ={
                 modalName: 'segmentDeliveryModal',
-                text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+                text: 'This is an off-tool project. The segment delivery feature is disabled in Matecat. ' +
+                    'You will have to deliver the whole project following the off-tool delivery procedure'
             };
             APP.ModalWindow.showModalComponent(SegmentDeliveryModal, props, "Segment delivery");
         },
@@ -466,9 +467,9 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
 
         var PLURAL_TYPE_NAME_TO_LANGUAGES = {
 
-            "chinese_like" : ["az", "id", "ja", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
+            "chinese_like" : ["az", "id", "ja", "ka", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
 
-            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "ka", "sw"],
+            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "sw"],
 
             "french_like" : ["fr", "hy", "pt", "hi"],
 
