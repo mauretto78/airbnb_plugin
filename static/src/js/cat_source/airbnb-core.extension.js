@@ -207,9 +207,14 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                         if (item.note.indexOf("¶") === -1) {
                             let split = item.note.split(":");
                             if ( split.length > 1) {
+                                let note = item.note.replace(split[0] + ':', '');
+                                let regExpUrl = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/$.\w-_]*)?\??(?:\S+)#?(?:[\w]*))?)/gmi;
+                                note = note.replace(regExpUrl, function ( match, text ) {
+                                    return '<a href="'+ text +'" target="_blank">' + text + '</a>';
+                                });
                                 let html = <div className="note" key={"note-" + index}>
                                     <span className="note-label">{split[0]}:</span>
-                                    <span dangerouslySetInnerHTML={self.allowHTML( split[1] )}/>
+                                    <span dangerouslySetInnerHTML={self.allowHTML( note )}/>
                                 </div>;
                                 notesHtml.push( html );
                             }
