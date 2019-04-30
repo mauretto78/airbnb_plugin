@@ -270,12 +270,12 @@ class Airbnb extends BaseFeature {
     }
 
     public function fromLayer0ToLayer1( Pipeline $channel ) {
-//        $channel->addAfter( new HtmlToPh(), new Variables() ); //FIXME: temporarily disabled
+        $channel->addAfter( new HtmlToPh(), new Variables() );
         return $channel;
     }
 
     public function fromLayer0ToLayer2( Pipeline $channel ) {
-//        $channel->addAfter( new HtmlToPhToLayer2(), new Variables() ); //FIXME: temporarily disabled
+        $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
         return $channel;
     }
 

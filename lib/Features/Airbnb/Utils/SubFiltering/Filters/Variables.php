@@ -27,9 +27,10 @@ class Variables extends AbstractHandler {
          * - %{{(text-align=center)}}
          * - %{vars}
          * - [AIRBNB] Reminder: Reply to %{guest}’s inquiry. |||| [AIRBNB] Reminder: Reply to %{guest}’s inquiry.
+         * - Airbnb account.%{\n}%{<ph id="__mtc_0" equiv-text="base64:Jmx0O2JyJmd0Ow=="/>}%{\n}1) From    // Exclude re-filtering
          */
 //        preg_match_all( '/%{{[^}]*?}}|(%{[^}]*?})[^\|]+?\1|(%{[^}]*?})/', $segment, $html, PREG_SET_ORDER );
-        preg_match_all( '/%{{[^}]*?}}|(%{[^}]*?})/', $segment, $html, PREG_SET_ORDER );
+        preg_match_all( '/%{{(?!<ph )[^}]*?}}|(%{(?!<ph )[^}]*?})/', $segment, $html, PREG_SET_ORDER );
         foreach ( $html as $pos => $variable ) {
             //replace subsequent elements excluding already encoded
             $segment = preg_replace(
