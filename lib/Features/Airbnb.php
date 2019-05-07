@@ -22,6 +22,8 @@ use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
 use SubFiltering\Filters\HtmlToPhToLayer2;
+use SubFiltering\Filters\LtGtDoubleDecode;
+use SubFiltering\Filters\PlaceHoldXliffTags;
 
 class Airbnb extends BaseFeature {
 
@@ -274,6 +276,11 @@ class Airbnb extends BaseFeature {
 
     public function fromLayer0ToLayer2( Pipeline $channel ) {
         $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
+        return $channel;
+    }
+
+    public function fromRawXliffToLayer0( Pipeline $channel ){
+        $channel->addAfter( new PlaceHoldXliffTags(), new LtGtDoubleDecode() ); // Fix source &amp;lt;&gt; // Hope and Pray
         return $channel;
     }
 
