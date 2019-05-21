@@ -495,7 +495,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
 
             "chinese_like" : ["az", "id", "ja", "ka", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
 
-            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "sw"],
+            "german_like" : ["da", "de", "en", "es", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "sw", "zu", "xh"],
 
             "french_like" : ["fr", "hy", "pt", "hi"],
 
