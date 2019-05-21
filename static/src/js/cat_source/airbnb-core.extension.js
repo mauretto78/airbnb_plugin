@@ -2,6 +2,26 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
 (function() {
     const showDelivery = ( config.pluggable && !_.isUndefined(config.pluggable.airbnb_ontool) );
     const deliveryEnabled = ( config.pluggable && config.pluggable.airbnb_ontool === '1' );
+
+    const setErrorNotification = function( title, message ){
+        _setNotification( title, message, 'error' );
+    };
+
+    const setSuccessNotification = function( title, message ){
+        _setNotification( title, message, 'success' );
+    };
+
+    const _setNotification = function( title, message, type ){
+        APP.addNotification({
+            title: title,
+            text: message,
+            type: type,
+            position: 'bl',
+            allowHtml: true,
+            autoDismiss: true,
+        });
+    };
+
     if ( showDelivery && deliveryEnabled ) {
         $(document).on('setTranslation:success', function(e, data) {
             let segment = data.segment;
@@ -19,22 +39,21 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             $('.buttons .deliver', segment).addClass('disabled');
             sessionStorage.setItem("segToDeliver" + idSeg, 0);
 
+            let jwt = Cookies.get( 'airbnb_session_' + config.id_job );
+            if( !jwt ){
+                setErrorNotification( 'Segment not delivered', 'Session expired. Please Login again into TranslationOS.' );
+                return;
+            }
+
             $.ajax({
                 data: {
-                    id_segment: idSeg
+                    id_segment: idSeg,
+                    jwt: jwt
                 },
                 type: 'post',
                 url : '/plugins/airbnb/job/'+ config.id_job +'/'+ config.password +'/segment_delivery',
             }).done((response)=>{
-                var notification = {
-                    title: 'Segment delivered',
-                    text: 'Segment ' + idSeg + ' was delivered.',
-                    type: 'success',
-                    position: 'bl',
-                    allowHtml: true,
-                    autoDismiss: true,
-                };
-                APP.addNotification(notification);
+                setSuccessNotification( 'Segment delivered', 'Segment ' + idSeg + ' was delivered.' );
                 if ( window.opener ) {
                     window.opener.postMessage({
                         name: 'segmentTranslationChange',
@@ -42,16 +61,18 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                         translation: response.translation
                     }, '*');
                 }
-            }).fail(()=>{
-                var notification = {
-                    title: 'Segment not delivered',
-                    text: 'Oops we got an Error. Please, contact <a href="mailto:support@matecat.com">support@matecat.com</a>.',
-                    type: 'error',
-                    position: 'bl',
-                    allowHtml: true,
-                    autoDismiss: true,
-                };
-                APP.addNotification(notification);
+            }).fail(( e )=>{
+                switch( e.status ){
+                    case 401:
+                        setErrorNotification( 'Segment not delivered', 'Session expired.<br/>Please Login again into TranslationOS.' );
+                        break;
+                    case 503:
+                        setErrorNotification( 'Segment not delivered', 'We experienced an issue, please try again in 5 minutes, if the error occurs again, please, contact <a href="mailto:support@matecat.com">support@matecat.com</a>.' );
+                        break;
+                    default:
+                        setErrorNotification( 'Segment not delivered', 'Oops we got an Error. Please, contact <a href="mailto:support@matecat.com">support@matecat.com</a>.' );
+                        break;
+                }
             });
             return false;
         });
