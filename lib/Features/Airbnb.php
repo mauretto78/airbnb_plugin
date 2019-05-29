@@ -14,6 +14,7 @@ use Exceptions\ValidationError;
 use Features;
 use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
 use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
+use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Features\Outsource\Constants\ServiceTypes;
 use Features\Outsource\Traits\Translated as TranslatedTrait;
@@ -271,11 +272,13 @@ class Airbnb extends BaseFeature {
 
     public function fromLayer0ToLayer1( Pipeline $channel ) {
         $channel->addAfter( new HtmlToPh(), new Variables() );
+        $channel->addAfter( new Variables(), new SmartCounts() );
         return $channel;
     }
 
     public function fromLayer0ToLayer2( Pipeline $channel ) {
         $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
+        $channel->addAfter( new Variables(), new SmartCounts() );
         return $channel;
     }
 
