@@ -288,7 +288,8 @@ class Airbnb extends BaseFeature {
     }
 
     public function checkTagMismatch( $errorType, \QA $QA ){
-        if( strpos( $QA->getSourceSeg(), "|||" ) !== false ){
+        //check for smart count sign ( base64 encoded "||||" === "fHx8fA==" )
+        if( strpos( $QA->getSourceSeg(), "equiv-text=\"base64:fHx8fA==\"" ) !== false ){
             $QA->addCustomError( [
                     'code'  => 2000,
                     'debug' => 'Smart Count variable missing',
