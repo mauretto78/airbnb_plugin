@@ -244,7 +244,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                     }
                 });
             }
-            if (this.props.segmentSource.indexOf('||||') > -1) {
+            if (this.props.segmentSource.indexOf('"base64:fHx8fA=="') > -1) { //base64 of pipes "||||", now they are in tag form
                 let targetPrefix = config.target_rfc.split('-')[0];
                 let langLike;
                 _.forOwn(PLURAL_TYPE_NAME_TO_LANGUAGES, function(value, key) {
