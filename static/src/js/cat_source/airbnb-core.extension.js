@@ -1,7 +1,24 @@
 const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal').default ;
 (function() {
-    const showDelivery = ( config.pluggable && !_.isUndefined(config.pluggable.airbnb_ontool) );
-    const deliveryEnabled = ( config.pluggable && config.pluggable.airbnb_ontool === '1' );
+
+    const deliveryObj = {
+        showDelivery: null,
+        deliveryEnabled: null,
+        signedJWT: null
+    };
+
+    const _setDeliveryOrNull = function() {
+        if(config.pluggable && !_.isUndefined(config.pluggable.airbnb_ontool)  ){
+            sessionStorage.setItem( 'showDelivery', "1" );
+            sessionStorage.setItem( 'deliveryEnabled', config.pluggable.airbnb_ontool );
+        }
+        if( config.pluggable && !_.isUndefined( config.pluggable.airbnb_auth_token ) ){
+            sessionStorage.setItem( "airbnb_auth_token", config.pluggable.airbnb_auth_token );
+        }
+        deliveryObj.deliveryEnabled = !!parseInt( sessionStorage.getItem( 'showDelivery' ) );
+        deliveryObj.showDelivery = !!parseInt( sessionStorage.getItem( 'showDelivery' ) );
+        deliveryObj.signedJWT = sessionStorage.getItem( "airbnb_auth_token" );
+    };
 
     const setErrorNotification = function( title, message ){
         _setNotification( title, message, 'error' );
@@ -22,7 +39,9 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         });
     };
 
-    if ( showDelivery && deliveryEnabled ) {
+    _setDeliveryOrNull();
+
+    if ( deliveryObj.showDelivery && deliveryObj.deliveryEnabled ) {
         $(document).on('setTranslation:success', function(e, data) {
             let segment = data.segment;
             $('.buttons .deliver', segment).removeClass('disabled');
@@ -39,8 +58,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             $('.buttons .deliver', segment).addClass('disabled');
             sessionStorage.setItem("segToDeliver" + idSeg, 0);
 
-            let jwt = Cookies.get( 'airbnb_session_' + config.id_job );
-            if( !jwt ){
+            if( deliveryObj.signedJWT === null ){
                 setErrorNotification( 'Segment not delivered', 'Session expired. Please Login again into TranslationOS.' );
                 return;
             }
@@ -48,7 +66,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             $.ajax({
                 data: {
                     id_segment: idSeg,
-                    jwt: jwt
+                    jwt: deliveryObj.signedJWT
                 },
                 type: 'post',
                 url : '/plugins/airbnb/job/'+ config.id_job +'/'+ config.password +'/segment_delivery',
@@ -76,7 +94,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             });
             return false;
         });
-    } else if ( showDelivery && !deliveryEnabled ) {
+    } else if ( deliveryObj.showDelivery && !deliveryObj.deliveryEnabled ) {
         $(document).on('click', 'section .buttons .deliver',  function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -173,7 +191,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             return segmentAfterId;
         },
         createButtons: function() {
-            if ( showDelivery ) {
+            if ( deliveryObj.showDelivery ) {
                 var button_label = config.status_labels.TRANSLATED;
                 var deliver, currentButton;
 
@@ -205,13 +223,13 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             }
         },
         inputEditAreaEventHandler: function() {
-            if ( deliveryEnabled ) {
+            if ( deliveryObj.deliveryEnabled ) {
                 $('.buttons .deliver', UI.currentSegment).addClass('disabled');
             }
             originalInputEditAreaEventHandler.apply(this, arguments);
         },
         gotoNextSegment: function (  ) {
-            if ( deliveryEnabled ) {
+            if ( deliveryObj.deliveryEnabled ) {
                 return false
             } else {
                 originalgoToNextSegment.apply(this, arguments);

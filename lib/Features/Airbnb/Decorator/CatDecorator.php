@@ -23,17 +23,22 @@ class CatDecorator extends AbstractCatDecorator {
     protected function _checkSessionCookie() {
         $chunk = $this->controller->getChunk();
 
-        if ( !isset($_COOKIE[ Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id ]) ) {
-            return ;
+        if ( !isset( $_COOKIE[ Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id ] ) ) {
+            return;
         }
 
-        $cookie = $_COOKIE[ Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id ] ;
-        $payload = \SimpleJWT::getValidPayload( $cookie ) ;
+        $cookie  = $_COOKIE[ Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id ];
+        $payload = \SimpleJWT::getValidPayload( $cookie );
 
-        if ( $payload['id_job'] == $chunk->id ) {
-            $this->template->append('config_js', [
-                    'airbnb_ontool' => $payload['ontool']
+        if ( $payload[ 'id_job' ] == $chunk->id ) {
+            $this->template->append( 'config_js', [
+                    'airbnb_ontool'     => $payload[ 'ontool' ],
+                    'airbnb_auth_token' => $cookie
             ] );
         }
+
+        unset( $_COOKIE[ Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id ] );
+        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id, null, strtotime( '-20 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
+
     }
 }
