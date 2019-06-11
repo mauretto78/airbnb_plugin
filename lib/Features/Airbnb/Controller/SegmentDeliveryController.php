@@ -17,12 +17,11 @@ use API\V2\Validators\ChunkPasswordValidator;
 use API\V2\Validators\LoginValidator;
 use Chunks_ChunkStruct;
 use Constants_JobStatus;
-use Exceptions\ValidationError;
+use DomainException;
 use Features\Airbnb;
 use Routes;
 use Segments_SegmentDao;
 use Segments_SegmentNoteDao;
-use Segments_SegmentNoteStruct;
 use SimpleJWT;
 use Translations_SegmentTranslationDao;
 use Utils;
@@ -39,7 +38,7 @@ class SegmentDeliveryController extends KleinController {
                 'ontool' => $this->request->param( 'ontool' )
         ] );
 
-        $jwt->setTimeToLive( 60 * 60 ); //set 1 hour
+        $jwt->setTimeToLive( 20 ); //set 20 seconds
 
         $this->response->json( [
                 'tos_jwt' => $this->request->param( "tos_jwt" ),
@@ -52,10 +51,19 @@ class SegmentDeliveryController extends KleinController {
 
     public function startSession() {
 
-        \SimpleJWT::getValidPayload( $this->request->param( 'matecat_jwt' ) );
+        $payload = \SimpleJWT::getValidPayload( $this->request->param( 'matecat_jwt' ) );
+        if ( $payload[ 'id_job' ] != $this->chunk->id ) {
+            throw new DomainException( "Forbidden. Invalid Token Context." );
+        }
+
+        $jwt = new SimpleJWT( [
+                'id_job' => $this->chunk->id,
+                'ontool' => $this->request->param( 'ontool' )
+        ] );
+        $jwt->setTimeToLive( 60 * 60 ); //set 60 minutes
 
         //by setting the cookie this endpoint is not stateless and MUST be used by clients
-        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $this->request->param( 'matecat_jwt' ), strtotime( '+2 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
+        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $jwt->jsonSerialize(), strtotime( '+2 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
 
         if ( $this->chunk->isArchiveable() || $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
             updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
