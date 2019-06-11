@@ -37,12 +37,10 @@ class SegmentDeliveryController extends KleinController {
                 'id_job' => $this->chunk->id,
                 'ontool' => $this->request->param( 'ontool' )
         ] );
-
-        $signed = $jwt->jsonSerialize();
-        $expire = strtotime( '+60 minutes' );
+        $jwt->setTimeToLive( 60 * 60 ); //set 1 hour
 
         //by setting the cookie this endpoint is not stateless and MUST be used by clients
-        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $signed, $expire, '/', \INIT::$COOKIE_DOMAIN );
+        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $jwt->jsonSerialize(), strtotime( '+2 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
 
         if ( $this->chunk->isArchiveable() || $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
             updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
@@ -75,9 +73,9 @@ class SegmentDeliveryController extends KleinController {
         $segment = ( new Segments_SegmentDao() )->getById( $segment_translation->id_segment );
 
         $notes = [];
-        foreach( Segments_SegmentNoteDao::getBySegmentId( $segment->id ) as $note ){
-            if( strpos( $note->note, '|¶|' ) !== false ){
-                $k_v = explode( '|¶|', $note->note );
+        foreach ( Segments_SegmentNoteDao::getBySegmentId( $segment->id ) as $note ) {
+            if ( strpos( $note->note, '|¶|' ) !== false ) {
+                $k_v                = explode( '|¶|', $note->note );
                 $notes[ $k_v[ 0 ] ] = $k_v[ 1 ];
             }
         }
@@ -95,7 +93,7 @@ class SegmentDeliveryController extends KleinController {
 
         $config = Airbnb::getConfig();
 
-        $mh                     = new \MultiCurlHandler();
+        $mh = new \MultiCurlHandler();
 
         $portParams = array_merge( [  // Redundant, the URL is enough
                 'trans_unit_id' => $segment->internal_id,
@@ -127,7 +125,7 @@ class SegmentDeliveryController extends KleinController {
         $mh->multiExec();
         $mh->multiCurlCloseAll();
 
-        $log = $mh->getSingleLog( $resource );
+        $log                                   = $mh->getSingleLog( $resource );
         $log[ 'options' ][ 'post_parameters' ] = $portParams; //decoded parameters for logging
         \Log::doJsonLog( $log );
 
