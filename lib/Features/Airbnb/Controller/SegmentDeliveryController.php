@@ -14,6 +14,7 @@ use API\V2\Exceptions\AuthenticationError;
 use API\V2\Exceptions\ExternalServiceException;
 use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
+use API\V2\Validators\LoginValidator;
 use Chunks_ChunkStruct;
 use Constants_JobStatus;
 use Exceptions\ValidationError;
@@ -31,16 +32,30 @@ class SegmentDeliveryController extends KleinController {
     /** @var  Chunks_ChunkStruct */
     protected $chunk;
 
-    public function startSession() {
+    public function auth(){
 
         $jwt = new SimpleJWT( [
                 'id_job' => $this->chunk->id,
                 'ontool' => $this->request->param( 'ontool' )
         ] );
+
         $jwt->setTimeToLive( 60 * 60 ); //set 1 hour
 
+        $this->response->json( [
+                'tos_jwt' => $this->request->param( "tos_jwt" ),
+                'matecat_jwt' => $jwt->jsonSerialize()
+        ] );
+
+        return $this;
+
+    }
+
+    public function startSession() {
+
+        \SimpleJWT::getValidPayload( $this->request->param( 'matecat_jwt' ) );
+
         //by setting the cookie this endpoint is not stateless and MUST be used by clients
-        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $jwt->jsonSerialize(), strtotime( '+2 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
+        setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $this->request->param( 'matecat_jwt' ), strtotime( '+2 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
 
         if ( $this->chunk->isArchiveable() || $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
             updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
@@ -144,6 +159,7 @@ class SegmentDeliveryController extends KleinController {
     }
 
     protected function afterConstruct() {
+
         $validator  = new ChunkPasswordValidator( $this );
         $controller = $this;
 
@@ -152,6 +168,8 @@ class SegmentDeliveryController extends KleinController {
         } );
 
         $this->appendValidator( $validator );
+        $this->appendValidator( new LoginValidator( $controller ) );
+
     }
 
     protected function _saveActivity( $action ) {
