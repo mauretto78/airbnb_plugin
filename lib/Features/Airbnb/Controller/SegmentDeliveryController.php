@@ -19,6 +19,8 @@ use Chunks_ChunkStruct;
 use Constants_JobStatus;
 use DomainException;
 use Features\Airbnb;
+use InvalidArgumentException;
+use Jobs_JobDao;
 use Routes;
 use Segments_SegmentDao;
 use Segments_SegmentNoteDao;
@@ -33,15 +35,22 @@ class SegmentDeliveryController extends KleinController {
 
     public function auth(){
 
+        $tos_jwt = $this->request->param( "tos_jwt" );
+
+        if( empty( $tos_jwt ) ){
+            throw new InvalidArgumentException( "Bad request", 400 );
+        }
+
         $jwt = new SimpleJWT( [
-                'id_job' => $this->chunk->id,
-                'ontool' => $this->request->param( 'ontool' )
+                'id_job'             => $this->chunk->id,
+                'tos_authentication' => "1",
+                'ontool'             => $this->request->param( 'ontool' )
         ] );
 
         $jwt->setTimeToLive( 20 ); //set 20 seconds
 
         $this->response->json( [
-                'tos_jwt' => $this->request->param( "tos_jwt" ),
+                'tos_jwt'     => $tos_jwt,
                 'matecat_jwt' => $jwt->jsonSerialize()
         ] );
 
@@ -52,22 +61,29 @@ class SegmentDeliveryController extends KleinController {
     public function startSession() {
 
         $payload = \SimpleJWT::getValidPayload( $this->request->param( 'matecat_jwt' ) );
-        if ( $payload[ 'id_job' ] != $this->chunk->id ) {
+        if ( $payload[ 'id_job' ] != $this->chunk->id || $payload[ 'tos_authentication' ] != "1" ) {
             throw new DomainException( "Forbidden. Invalid Token Context." );
         }
 
         $jwt = new SimpleJWT( [
-                'id_job' => $this->chunk->id,
-                'ontool' => $this->request->param( 'ontool' )
+                'id_job'        => $this->chunk->id,
+                'session_valid' => "1",
+                'uid'           => $this->getUser()->uid,
+                'ontool'        => $this->request->param( 'ontool' )
         ] );
+
         $jwt->setTimeToLive( 60 * 60 ); //set 60 minutes
 
         //by setting the cookie this endpoint is not stateless and MUST be used by clients
         setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $this->request->param( 'id_job' ), $jwt->jsonSerialize(), strtotime( '+2 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
 
         if ( $this->chunk->isArchiveable() || $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
-            updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
+
+            Jobs_JobDao::updateJobStatus( $this->chunk, Constants_JobStatus::STATUS_ACTIVE );
+            $lastSegmentsList = Translations_SegmentTranslationDao::getMaxSegmentIdsFromJob( $this->chunk );
+            Translations_SegmentTranslationDao::updateLastTranslationDateByIdList( $lastSegmentsList, Utils::mysqlTimestamp( time() ) );
             $this->_saveActivity( ActivityLogStruct::JOB_UNARCHIVED );
+
         }
 
         $project      = $this->chunk->getProject();
@@ -84,13 +100,18 @@ class SegmentDeliveryController extends KleinController {
      * @throws ExternalServiceException
      */
     public function send() {
+
         $segment_translation = Translations_SegmentTranslationDao::findBySegmentAndJob( $this->request->param( 'id_segment' ), $this->chunk->id );
         // rebuild the trans-unit and post to the external API
 
         try {
-            SimpleJWT::getValidPayload( $this->request->param( 'jwt' ) );
+            $payload = SimpleJWT::getValidPayload( $this->request->param( 'jwt' ) );
         } catch ( \Exception $e ) {
             throw new AuthenticationError( $e->getMessage(), $e->getCode() );
+        }
+
+        if( $payload[ 'uid' ] != $this->getUser()->uid || $payload[ 'session_valid' ] != "1" ){
+            throw new AuthenticationError( "Invalid Token." );
         }
 
         $segment = ( new Segments_SegmentDao() )->getById( $segment_translation->id_segment );
