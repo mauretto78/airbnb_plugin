@@ -15,7 +15,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         if( config.pluggable && !_.isUndefined( config.pluggable.airbnb_auth_token ) ){
             sessionStorage.setItem( "airbnb_auth_token", config.pluggable.airbnb_auth_token );
         }
-        deliveryObj.deliveryEnabled = !!parseInt( sessionStorage.getItem( 'showDelivery' ) );
+        deliveryObj.deliveryEnabled = !!parseInt( sessionStorage.getItem( 'deliveryEnabled' ) );
         deliveryObj.showDelivery = !!parseInt( sessionStorage.getItem( 'showDelivery' ) );
         deliveryObj.signedJWT = sessionStorage.getItem( "airbnb_auth_token" );
     };
