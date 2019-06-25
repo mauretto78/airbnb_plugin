@@ -25,7 +25,7 @@ class AirbnbTOSAuthLoginValidator extends LoginValidator {
                 $controllerInstance->doAction();
                 die(); // do not complete klein response, set 401 header
             } else {
-                throw new AuthenticationError( "Invalid Login. You must be logged in MateCat in order to access to the segment delivery.", 401 );
+                throw new AuthenticationError( "Invalid Login. You must be logged in MateCat in order to access the resource.", 401 );
             }
         }
 
