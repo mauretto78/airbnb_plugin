@@ -16,7 +16,6 @@ class AirbnbTOSAuthLoginValidator extends LoginValidator {
     public function _validate() {
 
         $user = $this->controller->getUser();
-        $this->controller->getRequest()->method();
         if( empty( $user )){
             if( $this->controller->getRequest()->method() === 'GET' ){
                 $controllerInstance = new CustomPage();

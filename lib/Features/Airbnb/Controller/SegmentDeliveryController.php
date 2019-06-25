@@ -10,11 +10,11 @@ namespace Features\Airbnb\Controller;
 
 use ActivityLog\Activity;
 use ActivityLog\ActivityLogStruct;
+use AirbnbTOSAuthLoginValidator;
 use API\V2\Exceptions\AuthenticationError;
 use API\V2\Exceptions\ExternalServiceException;
 use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
-use API\V2\Validators\LoginValidator;
 use Chunks_ChunkStruct;
 use Constants_JobStatus;
 use DomainException;
@@ -197,7 +197,7 @@ class SegmentDeliveryController extends KleinController {
         } );
 
         $this->appendValidator( $validator );
-        $this->appendValidator( new LoginValidator( $controller ) );
+        $this->appendValidator( new AirbnbTOSAuthLoginValidator( $controller ) );
 
     }
 
