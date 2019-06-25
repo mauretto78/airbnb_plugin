@@ -9,15 +9,15 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
 
     const _setDeliveryOrNull = function() {
         if(config.pluggable && !_.isUndefined(config.pluggable.airbnb_ontool)  ){
-            sessionStorage.setItem( 'showDelivery', "1" );
-            sessionStorage.setItem( 'deliveryEnabled', config.pluggable.airbnb_ontool );
+            sessionStorage.setItem( config.id_job + ':showDelivery', "1" );
+            sessionStorage.setItem( config.id_job + ':deliveryEnabled', config.pluggable.airbnb_ontool );
         }
         if( config.pluggable && !_.isUndefined( config.pluggable.airbnb_auth_token ) ){
-            sessionStorage.setItem( "airbnb_auth_token", config.pluggable.airbnb_auth_token );
+            sessionStorage.setItem( config.id_job + ":airbnb_auth_token", config.pluggable.airbnb_auth_token );
         }
-        deliveryObj.deliveryEnabled = !!parseInt( sessionStorage.getItem( 'deliveryEnabled' ) );
-        deliveryObj.showDelivery = !!parseInt( sessionStorage.getItem( 'showDelivery' ) );
-        deliveryObj.signedJWT = sessionStorage.getItem( "airbnb_auth_token" );
+        deliveryObj.deliveryEnabled = !!parseInt( sessionStorage.getItem( config.id_job + ':deliveryEnabled' ) );
+        deliveryObj.showDelivery = !!parseInt( sessionStorage.getItem( config.id_job + ':showDelivery' ) );
+        deliveryObj.signedJWT = sessionStorage.getItem( config.id_job + ":airbnb_auth_token" );
     };
 
     const setErrorNotification = function( title, message ){
