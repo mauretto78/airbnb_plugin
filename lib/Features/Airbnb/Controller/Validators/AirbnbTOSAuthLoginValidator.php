@@ -1,7 +1,10 @@
 <?php
 
+namespace Features\Airbnb\Controller\Validators;
+
 use API\V2\Exceptions\AuthenticationError;
 use API\V2\Validators\LoginValidator;
+use CustomPage;
 
 /**
  * Created by PhpStorm.

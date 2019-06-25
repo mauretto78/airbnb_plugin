@@ -10,7 +10,6 @@ namespace Features\Airbnb\Controller;
 
 use ActivityLog\Activity;
 use ActivityLog\ActivityLogStruct;
-use AirbnbTOSAuthLoginValidator;
 use API\V2\Exceptions\AuthenticationError;
 use API\V2\Exceptions\ExternalServiceException;
 use API\V2\KleinController;
@@ -19,6 +18,7 @@ use Chunks_ChunkStruct;
 use Constants_JobStatus;
 use DomainException;
 use Features\Airbnb;
+use Features\Airbnb\Controller\Validators\AirbnbTOSAuthLoginValidator;
 use InvalidArgumentException;
 use Jobs_JobDao;
 use Routes;
