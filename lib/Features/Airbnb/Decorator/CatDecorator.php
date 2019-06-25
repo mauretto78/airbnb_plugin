@@ -18,6 +18,8 @@ class CatDecorator extends AbstractCatDecorator {
 
         $this->template->append( 'footer_js', Routes::staticBuild( '/airbnb-core-build.js' ) );
         $this->template->append( 'css_resources', Routes::staticBuild( '/airbnb-build.css' ) );
+
+        $this->assignCatDecorator();
     }
 
     protected function _checkSessionCookie() {
@@ -41,4 +43,15 @@ class CatDecorator extends AbstractCatDecorator {
         setcookie( Airbnb::DELIVERY_COOKIE_PREFIX . $chunk->id, null, strtotime( '-20 minutes' ), '/', \INIT::$COOKIE_DOMAIN );
 
     }
+
+    protected function decorateForTranslate(){
+        $this->template->footer_show_revise_link = false;
+    }
+
+    /**
+     * Empty method because it's not necessery to do again what is written into the parent
+     */
+    protected function decorateForRevision() {
+    }
+
 }
