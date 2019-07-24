@@ -38,12 +38,27 @@ class Airbnb extends BaseFeature {
 
     const BATCH_WORD_COUNT_METADATA_KEY = "batch_word_count";
 
+    const MANUAL_APPROVE_METADATA_KEY = "manual_setup";
+
     const DELIVERY_COOKIE_PREFIX ='airbnb_session_'  ;
 
     public static $dependencies = [
         Features::TRANSLATION_VERSIONS,
         Features::REVIEW_EXTENDED
     ];
+
+    protected $manual_approve_flag = false;
+
+    /**
+     * @param bool $manual_approve_flag
+     *
+     * @return $this
+     */
+    public function setManualApproveFlag( $manual_approve_flag ) {
+        $this->manual_approve_flag = $manual_approve_flag;
+
+        return $this;
+    }
 
     public static function loadRoutes( Klein $klein ) {
         route( '/job/[:id_job]/[:password]/segment_delivery/[:id_segment]/session', 'POST', 'Features\Airbnb\Controller\SegmentDeliveryController', 'auth' );
@@ -135,7 +150,8 @@ class Airbnb extends BaseFeature {
                         'append_to_pid'    => ( !empty( $this->external_parent_project_id ) ? $this->external_parent_project_id : null ),
                         'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
                         'matecat_host'     => parse_url( \INIT::$HTTPHOST, PHP_URL_HOST ),
-                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] )
+                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] ),
+                        'manual_setup'     => ( !empty( $this->manual_approve_flag ) ? true : null ),
                 ], PHP_QUERY_RFC3986 );
 
     }
@@ -168,7 +184,8 @@ class Airbnb extends BaseFeature {
                         'of'               => 'json',
                         'matecat_raw'      => $job->total_raw_wc,
                         'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
-                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] )
+                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] ),
+                        'manual_setup'     => ( !empty( $this->manual_approve_flag ) ? true : null ),
                 ], PHP_QUERY_RFC3986 );
 
     }
@@ -192,6 +209,7 @@ class Airbnb extends BaseFeature {
             $metadataDao            = new \Projects_MetadataDao();
             $quote_pid_append       = @$metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
             $total_batch_word_count = @$metadataDao->get( $project_id, Airbnb::BATCH_WORD_COUNT_METADATA_KEY )->value;
+            $manual_approve_flag    = @$metadataDao->get( $project_id, Airbnb::MANUAL_APPROVE_METADATA_KEY )->value;
 
             if( !empty( $quote_pid_append ) ){
                 $this->setExternalParentProjectId( $quote_pid_append );
@@ -199,6 +217,10 @@ class Airbnb extends BaseFeature {
 
             if( !empty( $total_batch_word_count ) ){
                 $this->setTotalBatchWordCount( $total_batch_word_count );
+            }
+
+            if( !empty( $manual_approve_flag ) ){
+                $this->setManualApproveFlag( true );
             }
 
             $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
@@ -245,6 +267,10 @@ class Airbnb extends BaseFeature {
             $metadata[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ];
         }
 
+        if ( isset( $__postInput[ Airbnb::MANUAL_APPROVE_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::MANUAL_APPROVE_METADATA_KEY ] ) ) {
+            $metadata[ Airbnb::MANUAL_APPROVE_METADATA_KEY ] = $__postInput[ Airbnb::MANUAL_APPROVE_METADATA_KEY ];
+        }
+
         return $metadata;
     }
 
@@ -257,6 +283,7 @@ class Airbnb extends BaseFeature {
     public function filterNewProjectInputFilters( $filter_args ) {
         $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]  = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         $filter_args[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
+        $filter_args[ Airbnb::MANUAL_APPROVE_METADATA_KEY ]   = [ 'filter' => FILTER_VALIDATE_BOOLEAN | FILTER_NULL_ON_FAILURE ];
         return $filter_args;
     }
 
