@@ -21,6 +21,7 @@ use Features\Airbnb;
 use Features\Airbnb\Controller\Validators\AirbnbTOSAuthLoginValidator;
 use InvalidArgumentException;
 use Jobs_JobDao;
+use LQA\ChunkReviewStruct;
 use Routes;
 use Segments_SegmentDao;
 use Segments_SegmentNoteDao;
@@ -33,11 +34,14 @@ class SegmentDeliveryController extends KleinController {
     /** @var  Chunks_ChunkStruct */
     protected $chunk;
 
-    public function auth(){
+    /** @var ChunkReviewStruct */
+    protected $chunkReview;
+
+    public function auth() {
 
         $tos_jwt = $this->request->param( "tos_jwt" );
 
-        if( empty( $tos_jwt ) ){
+        if ( empty( $tos_jwt ) ) {
             throw new InvalidArgumentException( "Bad request", 400 );
         }
 
@@ -58,6 +62,9 @@ class SegmentDeliveryController extends KleinController {
 
     }
 
+    /**
+     * @throws \Exception
+     */
     public function startSession() {
 
         $payload = \SimpleJWT::getValidPayload( $this->request->param( 'matecat_jwt' ) );
@@ -88,9 +95,13 @@ class SegmentDeliveryController extends KleinController {
         }
 
         $project      = $this->chunk->getProject();
-        $redirect_url = Routes::translate(
-                $project->name, $this->chunk->id, $this->chunk->password, $this->chunk->source, $this->chunk->target
-        );
+
+        if( !$this->chunk->getIsReview() ){
+            $redirect_url = Routes::translate(  $project->name, $this->chunk->id, $this->chunk->password, $this->chunk->source, $this->chunk->target );
+        } else {
+            $redirect_url = Routes::revise( $project->name, $this->chunk->id, $this->chunkReview->review_password, $this->chunk->source, $this->chunk->target );
+        }
+
         $this->response->header( 'Cache-Control', 'max-age=0' );
         $this->response->redirect( $redirect_url . '#' . $this->request->param( 'id_segment' ) );
     }
@@ -111,7 +122,7 @@ class SegmentDeliveryController extends KleinController {
             throw new AuthenticationError( $e->getMessage(), $e->getCode() );
         }
 
-        if( $payload[ 'uid' ] != $this->getUser()->uid || $payload[ 'session_valid' ] != "1" ){
+        if ( $payload[ 'uid' ] != $this->getUser()->uid || $payload[ 'session_valid' ] != "1" ) {
             throw new AuthenticationError( "Invalid Token." );
         }
 
@@ -184,21 +195,25 @@ class SegmentDeliveryController extends KleinController {
 
     public function setChunk( Chunks_ChunkStruct $chunk ) {
         $this->chunk = $chunk;
+        return $this;
+    }
 
+    public function setChunkReview( ChunkReviewStruct $chunk_review ){
+        $this->chunkReview = $chunk_review;
         return $this;
     }
 
     protected function afterConstruct() {
 
         $validator  = new ChunkPasswordValidator( $this );
-        $controller = $this;
 
-        $validator->onSuccess( function () use ( $validator, $controller ) {
-            $controller->setChunk( $validator->getChunk() );
+        $validator->onSuccess( function () use ( $validator ) {
+            $this->setChunk( $validator->getChunk() );
+            $this->setChunkReview( $validator->getChunkReview() );
         } );
 
         $this->appendValidator( $validator );
-        $this->appendValidator( new AirbnbTOSAuthLoginValidator( $controller ) );
+        $this->appendValidator( new AirbnbTOSAuthLoginValidator( $this ) );
 
     }
 
@@ -212,5 +227,6 @@ class SegmentDeliveryController extends KleinController {
         $activity->event_date = date( 'Y-m-d H:i:s' );
         Activity::save( $activity );
     }
+
 }
 
