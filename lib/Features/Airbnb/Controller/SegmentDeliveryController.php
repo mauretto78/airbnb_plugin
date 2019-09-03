@@ -86,12 +86,9 @@ class SegmentDeliveryController extends KleinController {
 
         if ( $this->chunk->isArchiveable() || $this->chunk->status_owner == Constants_JobStatus::STATUS_ARCHIVED ) {
 
-            updateJobsStatus( 'job', $this->chunk->id, Constants_JobStatus::STATUS_ACTIVE, $this->chunk->password );
-
-            //THIS CODE MUST BE UN-COMMENTED WHEN SQL LAYER WILL BE TESTED
-//            Jobs_JobDao::updateJobStatus( $this->chunk, Constants_JobStatus::STATUS_ACTIVE );
-//            $lastSegmentsList = Translations_SegmentTranslationDao::getMaxSegmentIdsFromJob( $this->chunk );
-//            Translations_SegmentTranslationDao::updateLastTranslationDateByIdList( $lastSegmentsList, Utils::mysqlTimestamp( time() ) );
+            Jobs_JobDao::updateJobStatus( $this->chunk, Constants_JobStatus::STATUS_ACTIVE );
+            $lastSegmentsList = Translations_SegmentTranslationDao::getMaxSegmentIdsFromJob( $this->chunk );
+            Translations_SegmentTranslationDao::updateLastTranslationDateByIdList( $lastSegmentsList, Utils::mysqlTimestamp( time() ) );
 
             $this->_saveActivity( ActivityLogStruct::JOB_UNARCHIVED );
 
