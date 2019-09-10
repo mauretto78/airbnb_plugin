@@ -209,7 +209,9 @@ class SegmentDeliveryController extends KleinController {
 
         $validator->onSuccess( function () use ( $validator ) {
             $this->setChunk( $validator->getChunk() );
-            $this->setChunkReview( $validator->getChunkReview() );
+            if( $validator->getChunkReview() ){
+                $this->setChunkReview( $validator->getChunkReview() );
+            }
         } );
 
         $this->appendValidator( $validator );
