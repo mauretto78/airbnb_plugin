@@ -8,16 +8,11 @@
 
 namespace Features;
 
-use Analysis\Workers\TMAnalysisWorker;
 use API\V2\Json\ProjectUrls;
 use Exceptions\ValidationError;
 use Features;
-use Features\Airbnb\Utils\Email\ConfirmedQuotationEmail;
-use Features\Airbnb\Utils\Email\ErrorQuotationEmail;
 use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
-use Features\Outsource\Constants\ServiceTypes;
-use Features\Outsource\Traits\Translated as TranslatedTrait;
 use Klein\Klein;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
@@ -27,8 +22,6 @@ use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
 
 class Airbnb extends BaseFeature {
-
-    use TranslatedTrait;
 
     const FEATURE_CODE = "airbnb";
 
@@ -46,19 +39,6 @@ class Airbnb extends BaseFeature {
         Features::TRANSLATION_VERSIONS,
         Features::REVIEW_EXTENDED
     ];
-
-    protected $manual_approve_flag = false;
-
-    /**
-     * @param bool $manual_approve_flag
-     *
-     * @return $this
-     */
-    public function setManualApproveFlag( $manual_approve_flag ) {
-        $this->manual_approve_flag = $manual_approve_flag;
-
-        return $this;
-    }
 
     public static function loadRoutes( Klein $klein ) {
         route( '/job/[:id_job]/[:password]/segment_delivery/[:id_segment]/session', 'POST', 'Features\Airbnb\Controller\SegmentDeliveryController', 'auth' );
@@ -128,107 +108,6 @@ class Airbnb extends BaseFeature {
     public function rewriteContributionContexts( $segmentsList, $postInput ){
         $segmentsList->id_before->segment = md5( str_replace( 'phrase_key|¶|', '', $postInput[ 'context_before' ] ) . $segmentsList->id_segment->segment );
         $segmentsList->id_after = null;
-    }
-
-
-    /**
-     * @param                         $urls
-     * @param \Projects_ProjectStruct $project
-     *
-     * @return string
-     */
-    protected function prepareConfirmUrl( $urls, \Projects_ProjectStruct $project ) {
-
-        return "http://www.translated.net/hts/index.php?" . http_build_query( [
-                        'f'                => 'confirm',
-                        'cid'              => $this->config[ 'translated_username' ],
-                        'p'                => $this->config[ 'translated_password' ],
-                        'pid'              => $this->external_project_id,
-                        'c'                => 1,
-                        'of'               => "json",
-                        'urls'             => json_encode( $urls ),
-                        'append_to_pid'    => ( !empty( $this->external_parent_project_id ) ? $this->external_parent_project_id : null ),
-                        'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
-                        'matecat_host'     => parse_url( \INIT::$HTTPHOST, PHP_URL_HOST ),
-                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] ),
-                        'manual_setup'     => ( !empty( $this->manual_approve_flag ) ? true : null ),
-                ], PHP_QUERY_RFC3986 );
-
-    }
-
-    /**
-     * @param \Jobs_JobStruct         $job
-     * @param                         $eq_word
-     * @param \Projects_ProjectStruct $project
-     * @param string                  $service_type
-     *
-     * @return string
-     */
-    protected function prepareQuoteUrl( \Jobs_JobStruct $job, $eq_word, \Projects_ProjectStruct $project, $service_type = ServiceTypes::SERVICE_TYPE_PROFESSIONAL ){
-
-        return "http://www.translated.net/hts/index.php?" . http_build_query( [
-                        'f'                => 'quote',
-                        'cid'              => $this->config[ 'translated_username' ],
-                        'p'                => $this->config[ 'translated_password' ],
-                        's'                => $job->source,
-                        't'                => $job->target,
-                        'pn'               => $project->name,
-                        'w'                => ( is_null( $eq_word ) ? 0 : $eq_word ),
-                        'df'               => 'matecat',
-                        'matecat_pid'      => $project->id,
-                        'matecat_ppass'    => $project->password,
-                        'matecat_pname'    => $project->name,
-                        'subject'          => $job->subject,
-                        'jt'               => $service_type,
-                        'fd'               => 0,
-                        'of'               => 'json',
-                        'matecat_raw'      => $job->total_raw_wc,
-                        'batch_word_count' => ( !empty( $this->total_batch_word_count ) ? $this->total_batch_word_count : null ),
-                        'on_tool'          => !in_array( $project->id_customer, $this->config[ 'airbnb_translated_internal_user' ] ),
-                        'manual_setup'     => ( !empty( $this->manual_approve_flag ) ? true : null ),
-                ], PHP_QUERY_RFC3986 );
-
-    }
-
-    /**
-     * @see TMAnalysisWorker::_tryToCloseProject()
-     *
-     * @param $project_id
-     * @param $_analyzed_report
-     *
-     * @throws \Exception
-     */
-    public function afterTMAnalysisCloseProject( $project_id, $_analyzed_report ) {
-
-        $config = self::getConfig();
-        $projectStruct = \Projects_ProjectDao::findById( $project_id );
-        $internal_users = $config[ 'airbnb_translated_internal_user' ];
-
-        if( !in_array( $projectStruct->id_customer, $internal_users ) ){
-
-            $metadataDao            = new \Projects_MetadataDao();
-            $quote_pid_append       = @$metadataDao->get( $project_id, Airbnb::REFERENCE_QUOTE_METADATA_KEY )->value;
-            $total_batch_word_count = @$metadataDao->get( $project_id, Airbnb::BATCH_WORD_COUNT_METADATA_KEY )->value;
-            $manual_approve_flag    = @$metadataDao->get( $project_id, Airbnb::MANUAL_APPROVE_METADATA_KEY )->value;
-
-            if( !empty( $quote_pid_append ) ){
-                $this->setExternalParentProjectId( $quote_pid_append );
-            }
-
-            if( !empty( $total_batch_word_count ) ){
-                $this->setTotalBatchWordCount( $total_batch_word_count );
-            }
-
-            if( !empty( $manual_approve_flag ) ){
-                $this->setManualApproveFlag( true );
-            }
-
-            $this->setSuccessMailSender( new ConfirmedQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/confirmed_quotation.html' ) );
-            $this->setFailureMailSender( new ErrorQuotationEmail( self::getPluginBasePath() . '/Features/Airbnb/View/Emails/error_quotation.html' ) );
-            $this->requestProjectQuote( $projectStruct, $_analyzed_report, ServiceTypes::SERVICE_TYPE_PREMIUM );
-
-        }
-
     }
 
     /**
