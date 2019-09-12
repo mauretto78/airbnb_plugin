@@ -25,6 +25,7 @@ use SubFiltering\Filters\HtmlToPh;
 use SubFiltering\Filters\HtmlToPhToLayer2;
 use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
+use Users_UserStruct;
 
 class Airbnb extends BaseFeature {
 
@@ -188,6 +189,28 @@ class Airbnb extends BaseFeature {
                         'manual_setup'     => ( !empty( $this->manual_approve_flag ) ? true : null ),
                 ], PHP_QUERY_RFC3986 );
 
+    }
+
+    public function filterRevisionChangeNotificationList( $emails ) {
+        // TODO: add custom email recipients here
+        $config = self::getConfig();
+
+        if ( isset( $config['revision_change_notification_recipients'] ) ) {
+            foreach( $config['revision_change_notification_recipients'] as $recipient ) {
+                list($firstName, $lastName, $email) = explode(',', $recipient ) ;
+                $emails[] = [
+                        'recipient' => new Users_UserStruct([
+                                'email'      => $email,
+                                'first_name' => $firstName,
+                                'last_name'  => $lastName
+                        ]),
+                        'isPreviousChangeAuthor' => false
+                ];
+
+            }
+        }
+
+        return $emails ;
     }
 
     /**
