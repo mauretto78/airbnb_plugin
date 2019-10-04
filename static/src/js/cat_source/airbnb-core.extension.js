@@ -1,5 +1,3 @@
-import SegmentMainButtons from "../../../../../ebay/static/src/js/components/SegmentMainButtons";
-
 const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal').default ;
 (function() {
 
