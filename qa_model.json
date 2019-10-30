@@ -18,6 +18,17 @@
       {
         "label": "Style (Inconsistent style, Readability, Unidiomatic)",
         "code": "STY"
+      },
+      {
+        "label": "Preferential edit",
+        "code": "PRE",
+        "severities": [
+          {
+            "label": "Neutral",
+            "dqf_id" : 1,
+            "penalty": 0
+          }
+        ]
       }
     ],
     "severities": [
