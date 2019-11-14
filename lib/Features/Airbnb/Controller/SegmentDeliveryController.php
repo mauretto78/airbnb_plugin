@@ -19,6 +19,7 @@ use Constants_JobStatus;
 use DomainException;
 use Features\Airbnb;
 use Features\Airbnb\Controller\Validators\AirbnbTOSAuthLoginValidator;
+use Features\ReviewExtended\ReviewUtils;
 use InvalidArgumentException;
 use Jobs_JobDao;
 use LQA\ChunkReviewStruct;
@@ -99,7 +100,8 @@ class SegmentDeliveryController extends KleinController {
         if( !$this->chunk->getIsReview() ){
             $redirect_url = Routes::translate(  $project->name, $this->chunk->id, $this->chunk->password, $this->chunk->source, $this->chunk->target );
         } else {
-            $redirect_url = Routes::revise( $project->name, $this->chunk->id, $this->chunkReview->review_password, $this->chunk->source, $this->chunk->target );
+            $options[ 'revision_number' ] = ReviewUtils::sourcePageToRevisionNumber( $this->chunk->getSourcePage() );
+            $redirect_url = Routes::revise( $project->name, $this->chunk->id, $this->chunkReview->review_password, $this->chunk->source, $this->chunk->target, $options[ 'revision_number' ] );
         }
 
         $this->response->header( 'Cache-Control', 'max-age=0' );
