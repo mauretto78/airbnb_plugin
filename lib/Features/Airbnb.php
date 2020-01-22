@@ -14,6 +14,8 @@ use Features;
 use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Klein\Klein;
+use Predis\Connection\ConnectionException;
+use ReflectionException;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
@@ -193,6 +195,9 @@ class Airbnb extends BaseFeature {
      * Entry point for project data validation for this feature.
      *
      * @param $projectStructure
+     *
+     * @throws ConnectionException
+     * @throws ReflectionException
      */
     public function validateProjectCreation( $projectStructure )  {
         //override Revise Improved qa Model
@@ -202,12 +207,6 @@ class Airbnb extends BaseFeature {
 
     public function fromLayer0ToLayer1( Pipeline $channel ) {
         $channel->addAfter( new HtmlToPh(), new Variables() );
-        $channel->addAfter( new Variables(), new SmartCounts() );
-        return $channel;
-    }
-
-    public function fromLayer0ToLayer2( Pipeline $channel ) {
-        $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
         $channel->addAfter( new Variables(), new SmartCounts() );
         return $channel;
     }
