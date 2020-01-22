@@ -14,6 +14,8 @@ use Features;
 use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Klein\Klein;
+use Predis\Connection\ConnectionException;
+use ReflectionException;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
@@ -21,6 +23,7 @@ use SubFiltering\Filters\HtmlToPhToLayer2;
 use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
 use Users_UserStruct;
+use Features\Airbnb\Utils\SmartCount\Pluralization;
 
 class Airbnb extends BaseFeature {
 
@@ -34,11 +37,11 @@ class Airbnb extends BaseFeature {
 
     const MANUAL_APPROVE_METADATA_KEY = "manual_setup";
 
-    const DELIVERY_COOKIE_PREFIX ='airbnb_session_'  ;
+    const DELIVERY_COOKIE_PREFIX = 'airbnb_session_';
 
     public static $dependencies = [
-        Features::TRANSLATION_VERSIONS,
-        Features::REVIEW_EXTENDED
+            Features::TRANSLATION_VERSIONS,
+            Features::REVIEW_EXTENDED
     ];
 
     public static function loadRoutes( Klein $klein ) {
@@ -48,20 +51,20 @@ class Airbnb extends BaseFeature {
     }
 
     /**
-     * @see \ProjectManager::_storeSegments()
-     *
      * @param $_segment_metadata array
      * @param $projectStructure
      *
      * @return array
+     * @see \ProjectManager::_storeSegments()
+     *
      */
-    public function appendFieldToAnalysisObject( $_segment_metadata, \ArrayObject $projectStructure ){
+    public function appendFieldToAnalysisObject( $_segment_metadata, \ArrayObject $projectStructure ) {
 
         if ( $projectStructure[ 'notes' ]->offsetExists( $_segment_metadata[ 'internal_id' ] ) ) {
 
-            foreach( $projectStructure[ 'notes' ][ $_segment_metadata[ 'internal_id' ] ][ 'entries' ] as $k => $entry ){
+            foreach ( $projectStructure[ 'notes' ][ $_segment_metadata[ 'internal_id' ] ][ 'entries' ] as $k => $entry ) {
 
-                if( strpos( $entry, 'phrase_key|¶|' ) !== false ){
+                if ( strpos( $entry, 'phrase_key|¶|' ) !== false ) {
                     $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( str_replace( 'phrase_key|¶|', '', $entry ) . $_segment_metadata[ 'segment' ] );
                 }
 
@@ -74,21 +77,21 @@ class Airbnb extends BaseFeature {
     }
 
     /**
-     * @see \Engines_MyMemory::get()
-     * @see Airbnb::appendFieldToAnalysisObject()
-     *
      * @param $parameters
      *
      * @param $original_config
      *
      * @return mixed
+     * @see Airbnb::appendFieldToAnalysisObject()
+     *
+     * @see \Engines_MyMemory::get()
      */
-    public function filterMyMemoryGetParameters( $parameters, $original_config ){
+    public function filterMyMemoryGetParameters( $parameters, $original_config ) {
 
         /*
          * From analysis we will have additional params and spice field
          */
-        if( isset( $original_config[ 'additional_params' ][ 'spice' ] ) ){
+        if ( isset( $original_config[ 'additional_params' ][ 'spice' ] ) ) {
             $parameters[ 'context_before' ] = $original_config[ 'additional_params' ][ 'spice' ];
             $parameters[ 'context_after' ]  = null;
         }
@@ -103,34 +106,35 @@ class Airbnb extends BaseFeature {
         // TODO: add custom email recipients here
         $config = self::getConfig();
 
-        if ( isset( $config['revision_change_notification_recipients'] ) ) {
-            foreach( $config['revision_change_notification_recipients'] as $recipient ) {
-                list($firstName, $lastName, $email) = explode(',', $recipient ) ;
+        if ( isset( $config[ 'revision_change_notification_recipients' ] ) ) {
+            foreach ( $config[ 'revision_change_notification_recipients' ] as $recipient ) {
+                list( $firstName, $lastName, $email ) = explode( ',', $recipient );
                 $emails[] = [
-                        'recipient' => new Users_UserStruct([
+                        'recipient'              => new Users_UserStruct( [
                                 'email'      => $email,
                                 'first_name' => $firstName,
                                 'last_name'  => $lastName
-                        ]),
+                        ] ),
                         'isPreviousChangeAuthor' => false
                 ];
 
             }
         }
 
-        return $emails ;
+        return $emails;
     }
 
     /**
+     * @param $segmentsList Segments_SegmentStruct[]
+     * @param $postInput
+     *
      * @see \getContributionController::doAction()
      * @see \setTranslationController
      *
-     * @param $segmentsList Segments_SegmentStruct[]
-     * @param $postInput
      */
-    public function rewriteContributionContexts( $segmentsList, $postInput ){
+    public function rewriteContributionContexts( $segmentsList, $postInput ) {
         $segmentsList->id_before->segment = md5( str_replace( 'phrase_key|¶|', '', $postInput[ 'context_before' ] ) . $segmentsList->id_segment->segment );
-        $segmentsList->id_after = null;
+        $segmentsList->id_after           = null;
     }
 
     /**
@@ -145,13 +149,13 @@ class Airbnb extends BaseFeature {
     /**
      * Add options to project metadata
      *
-     * @see \NewController::__validateMetadataParam()
-     *
      * @param $metadata
      * @param $__postInput
      *
      * @return mixed
      * @throws \Exception
+     * @see \NewController::__validateMetadataParam()
+     *
      */
     public function filterProjectMetadata( $metadata, $__postInput ) {
 
@@ -177,15 +181,16 @@ class Airbnb extends BaseFeature {
     }
 
     /**
-     * @see \NewController::__construct()
      * @param $filter_args
      *
      * @return mixed
+     * @see \NewController::__construct()
      */
     public function filterNewProjectInputFilters( $filter_args ) {
         $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]  = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         $filter_args[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
         $filter_args[ Airbnb::MANUAL_APPROVE_METADATA_KEY ]   = [ 'filter' => FILTER_VALIDATE_BOOLEAN | FILTER_NULL_ON_FAILURE ];
+
         return $filter_args;
     }
 
@@ -193,8 +198,11 @@ class Airbnb extends BaseFeature {
      * Entry point for project data validation for this feature.
      *
      * @param $projectStructure
+     *
+     * @throws ConnectionException
+     * @throws ReflectionException
      */
-    public function validateProjectCreation( $projectStructure )  {
+    public function validateProjectCreation( $projectStructure ) {
         //override Revise Improved qa Model
         $qa_mode_file = realpath( self::getPluginBasePath() . "/../qa_model.json" );
         ReviewExtended::loadAndValidateModelFromJsonFile( $projectStructure, $qa_mode_file );
@@ -203,30 +211,69 @@ class Airbnb extends BaseFeature {
     public function fromLayer0ToLayer1( Pipeline $channel ) {
         $channel->addAfter( new HtmlToPh(), new Variables() );
         $channel->addAfter( new Variables(), new SmartCounts() );
-        return $channel;
-    }
 
-    public function fromLayer0ToLayer2( Pipeline $channel ) {
-        $channel->addAfter( new HtmlToPhToLayer2(), new Variables() );
-        $channel->addAfter( new Variables(), new SmartCounts() );
         return $channel;
     }
 
     public function fromRawXliffToLayer0( Pipeline $channel ){
         $channel->addAfter( new PlaceHoldXliffTags(), new LtGtDoubleDecode() ); // Fix source &amp;lt;&gt; // Hope and Pray
+
         return $channel;
     }
 
-    public function checkTagMismatch( $errorType, \QA $QA ){
+    /**
+     * Check tag mismatch / smartcount consistency
+     * -------------------------------------------------
+     * NOTE 09/01/2020
+     * -------------------------------------------------
+     * This function does the following:
+     *
+     * - obtain the count of |||| separators in target raw text, and then sum 1 to calculate the expected tag count;
+     * - obtain the number of possible plural forms of the target language (ex: "ar-SA --> 6");
+     * - check for the equivalence of these two numbers, and in case return an error code 2000.
+     *
+     * Example:
+     *
+     * [source:en-US] - House |||| Houses
+     * [target:ar-SA] - XXXX |||| XXXX |||| XXXX |||| XXXX |||| XXXX |||| XXXX
+     *
+     * $separatorCount = 5
+     * $expectedTagCount = 6
+     * $pluralizationCountForTargetLang = Pluralization::getCountFromLang('ar-SA') = 6
+     *
+     * No error will be produced.
+     *
+     * @param     $errorType
+     * @param \QA $QA
+     *
+     * @return int
+     */
+    public function checkTagMismatch( $errorType, \QA $QA ) {
+
         //check for smart count sign ( base64 encoded "||||" === "fHx8fA==" )
-        if( strpos( $QA->getSourceSeg(), "equiv-text=\"base64:fHx8fA==\"" ) !== false ){
+        if ( strpos( $QA->getSourceSeg(), "equiv-text=\"base64:fHx8fA==\"" ) !== false ) {
+
+            $separatorCount                  = substr_count( $QA->getTargetSeg(), "equiv-text=\"base64:fHx8fA==\"" );
+            $expectedTagCount                = 1 + $separatorCount;
+            $pluralizationCountForTargetLang = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
+
+            if ($expectedTagCount === $pluralizationCountForTargetLang) {
+                $QA->addCustomError( [
+                        'code'  => 0,
+                ] );
+
+                return 0;
+            }
+
             $QA->addCustomError( [
                     'code'  => 2000,
                     'debug' => 'Smart Count variable missing',
                     'tip'   => 'Check your language specific configuration.'
             ] );
+
             return 2000;
         }
+
         return $errorType;
     }
 
