@@ -12,58 +12,58 @@ class Pluralization
     public static function getCountFromLang($lang){
         switch ($lang){
             case "az-AZ":
-            case "zh-CN":
-            case "zh-TW":
-            case "zh-HK":
             case "id-ID":
             case "ja-JP":
+            case "ka-GE":
             case "ko-KR":
             case "ms-MY":
             case "th-TH":
             case "tr-TR":
             case "vi-VN":
-            case "ka-GE":
+            case "zh-CN":
+            case "zh-HK":
+            case "zh-TW":
                 return 1;
 
-            case "sq-AL":
             case "bg-BG":
             case "ca-ES":
             case "da-DK":
-            case "nl-NL":
-            case "en-GB":
-            case "et-EE":
-            case "fi-FI":
             case "de-DE":
             case "el-GR":
-            case "he-IL":
-            case "hu-HU":
-            case "it-IT":
-            case "nb-NO":
-            case "pt-PT":
+            case "en-GB":
             case "es-ES":
-            case "sw-KE":
-            case "sv-SE":
-            case "hy-AM":
-            case "pt-BR":
+            case "et-EE":
+            case "fi-FI":
             case "fr-FR":
+            case "he-IL":
             case "hi-IN":
+            case "hu-HU":
+            case "hy-AM":
             case "is-IS":
+            case "it-IT":
             case "mk-MK":
+            case "nb-NO":
+            case "nl-NL":
+            case "pt-BR":
+            case "pt-PT":
+            case "sq-AL":
+            case "sv-SE":
+            case "sw-KE":
             case "tl-PH":
                 return 2;
 
-            case "cs-CZ":
-            case "sk-SK":
             case "bs-BA":
+            case "cs-CZ":
             case "hr-HR":
-            case "sr-ME":
-            case "sr-Latn-RS":
-            case "uk-UA":
-            case "ru-RU":
-            case "pl-PL":
-            case "lv-LV":
             case "lt-LT":
+            case "lv-LV":
+            case "pl-PL":
             case "ro-RO":
+            case "ru-RU":
+            case "sk-SK":
+            case "sr-Latn-RS":
+            case "sr-ME":
+            case "uk-UA":
                 return 3;
 
             case "mt-MT":

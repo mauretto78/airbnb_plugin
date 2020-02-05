@@ -266,12 +266,12 @@ class Airbnb extends BaseFeature {
             }
 
             $QA->addCustomError( [
-                    'code'  => 2000,
-                    'debug' => 'Smart Count variable missing',
+                    'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
+                    'debug' => 'Smart Count rules not compliant with target language',
                     'tip'   => 'Check your language specific configuration.'
             ] );
 
-            return 2000;
+            return \QA::SMART_COUNT_PLURAL_MISMATCH;
         }
 
         return $errorType;
