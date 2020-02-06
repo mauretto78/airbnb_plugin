@@ -14,7 +14,6 @@ class Pluralization
             case "az-AZ":
             case "id-ID":
             case "ja-JP":
-            case "ka-GE":
             case "ko-KR":
             case "ms-MY":
             case "th-TH":
@@ -32,6 +31,11 @@ class Pluralization
             case "el-GR":
             case "en-GB":
             case "es-ES":
+            case "es-AR":
+            case "es-CO":
+            case "es-419":
+            case "es-MX":
+            case "es-US":
             case "et-EE":
             case "fi-FI":
             case "fr-FR":
@@ -39,6 +43,7 @@ class Pluralization
             case "hi-IN":
             case "hu-HU":
             case "hy-AM":
+            case "ka-GE":
             case "is-IS":
             case "it-IT":
             case "mk-MK":
