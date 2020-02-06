@@ -55,6 +55,7 @@ class Pluralization
             case "sv-SE":
             case "sw-KE":
             case "tl-PH":
+            case "xh-ZA":
                 return 2;
 
             case "bs-BA":
