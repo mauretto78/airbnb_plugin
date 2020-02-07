@@ -257,12 +257,27 @@ class Airbnb extends BaseFeature {
             $expectedTagCount                = 1 + $separatorCount;
             $pluralizationCountForTargetLang = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
 
+            // check for |||| count correspondence
             if ($expectedTagCount === $pluralizationCountForTargetLang) {
                 $QA->addCustomError( [
                         'code'  => 0,
                 ] );
 
                 return 0;
+            }
+
+            // check for correct %{smart_count} tag count
+            preg_match_all('/%{smart_count}/', $QA->getSourceSeg(), $sourceSegMatch);
+            preg_match_all('/%{smart_count}/', $QA->getTargetSeg(), $targetSegMatch);
+
+            if( count($sourceSegMatch[0]) !== count($targetSegMatch[0]) ){
+                $QA->addCustomError( [
+                        'code'  => \QA::SMART_COUNT_MISMATCH,
+                        'debug' => '%{smart_count} tag count mismatch',
+                        'tip'   => 'Check the %{smart_count} tag count match.'
+                ] );
+
+                return \QA::SMART_COUNT_MISMATCH;
             }
 
             $QA->addCustomError( [
