@@ -39,6 +39,7 @@ class Pluralization
             case "et-EE":
             case "fi-FI":
             case "fr-FR":
+            case "fr-CA":
             case "he-IL":
             case "hi-IN":
             case "hu-HU":
@@ -56,6 +57,7 @@ class Pluralization
             case "sw-KE":
             case "tl-PH":
             case "xh-ZA":
+            case "zu-ZA":
                 return 2;
 
             case "bs-BA":
