@@ -259,25 +259,26 @@ class Airbnb extends BaseFeature {
 
             // check for |||| count correspondence
             if ($expectedTagCount === $pluralizationCountForTargetLang) {
+
+                // check the count of %{smart_count} tags in the source
+                $sourceSegMatch = substr_count( $QA->getSourceSeg(), "equiv-text=\"base64:JXtzbWFydF9jb3VudH0=\"" );
+                $targetSegMatch = substr_count( $QA->getTargetSeg(), "equiv-text=\"base64:JXtzbWFydF9jb3VudH0=\"" );
+
+                if( $sourceSegMatch !== $targetSegMatch ){
+                    $QA->addCustomError( [
+                            'code'  => \QA::SMART_COUNT_MISMATCH,
+                            'debug' => '%{smart_count} tag count mismatch',
+                            'tip'   => 'Check the count of %{smart_count} tags in the source.'
+                    ] );
+
+                    return \QA::SMART_COUNT_MISMATCH;
+                }
+
                 $QA->addCustomError( [
                         'code'  => 0,
                 ] );
 
                 return 0;
-            }
-
-            // check for correct %{smart_count} tag count
-            preg_match_all('/%{smart_count}/', $QA->getSourceSeg(), $sourceSegMatch);
-            preg_match_all('/%{smart_count}/', $QA->getTargetSeg(), $targetSegMatch);
-
-            if( count($sourceSegMatch[0]) !== count($targetSegMatch[0]) ){
-                $QA->addCustomError( [
-                        'code'  => \QA::SMART_COUNT_MISMATCH,
-                        'debug' => '%{smart_count} tag count mismatch',
-                        'tip'   => 'Check the %{smart_count} tag count match.'
-                ] );
-
-                return \QA::SMART_COUNT_MISMATCH;
             }
 
             $QA->addCustomError( [
