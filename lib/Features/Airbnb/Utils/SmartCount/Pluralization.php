@@ -29,6 +29,7 @@ class Pluralization
             case "da-DK":
             case "de-DE":
             case "el-GR":
+            case "en-AU":
             case "en-GB":
             case "es-ES":
             case "es-AR":
@@ -50,6 +51,7 @@ class Pluralization
             case "mk-MK":
             case "nb-NO":
             case "nl-NL":
+            case "nn-NO":
             case "pt-BR":
             case "pt-PT":
             case "sq-AL":
