@@ -11,6 +11,7 @@ namespace Features;
 use API\V2\Json\ProjectUrls;
 use Exceptions\ValidationError;
 use Features;
+use Features\Airbnb\Utils\SmartCount\Pluralization;
 use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Klein\Klein;
@@ -22,7 +23,6 @@ use SubFiltering\Filters\HtmlToPh;
 use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
 use Users_UserStruct;
-use Features\Airbnb\Utils\SmartCount\Pluralization;
 
 class Airbnb extends BaseFeature {
 
@@ -214,7 +214,7 @@ class Airbnb extends BaseFeature {
         return $channel;
     }
 
-    public function fromRawXliffToLayer0( Pipeline $channel ){
+    public function fromRawXliffToLayer0( Pipeline $channel ) {
         $channel->addAfter( new PlaceHoldXliffTags(), new LtGtDoubleDecode() ); // Fix source &amp;lt;&gt; // Hope and Pray
 
         return $channel;
@@ -257,7 +257,7 @@ class Airbnb extends BaseFeature {
             $pluralizationCountForTargetLang = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
 
             // check for |||| count correspondence
-            if ($expectedTagCount !== $pluralizationCountForTargetLang) {
+            if ( $expectedTagCount !== $pluralizationCountForTargetLang ) {
                 $QA->addCustomError( [
                         'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
                         'debug' => 'Smart Count rules not compliant with target language',
@@ -267,21 +267,57 @@ class Airbnb extends BaseFeature {
                 return \QA::SMART_COUNT_PLURAL_MISMATCH;
             }
 
-            // check the count of %{smart_count} tags in the source
-            preg_match_all('/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:JXtzbWFydF9jb3VudH0="\/>/ui', $QA->getTargetSeg(), $targetSegMatch);
+            //
+            // check the count of smart_count tags in the source
+            //
+            // $srcSegMatch example:
+            //
+            // Array
+            // (
+            //    [0] => Array
+            //        (
+            //            [0] => <ph id="mtc_1" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
+            //            [1] => <ph id="mtc_2" equiv-text="base64:fHx8fA=="/>
+            //            [2] => <ph id="mtc_3" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
+            //        )
+            //
+            // )
+            //
+            // $targetSegMatch example:
+            //
+            // Array
+            // (
+            //    [0] => Array
+            //        (
+            //            [0] => <ph id="mtc_1" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
+            //            [1] => <ph id="mtc_2" equiv-text="base64:fHx8fA=="/>
+            //            [2] => <ph id="mtc_3" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
+            //            [3] => <ph id="mtc_2" equiv-text="base64:fHx8fA=="/>
+            //        )
+            //
+            // )
+            preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getSourceSeg(), $srcSegMatch );
+            preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getTargetSeg(), $targetSegMatch );
 
-            if( count($targetSegMatch[0]) !== $expectedTagCount ){
-                $QA->addCustomError( [
-                        'code'  => \QA::SMART_COUNT_MISMATCH,
-                        'debug' => '%{smart_count} tag count mismatch',
-                        'tip'   => 'Check the count of %{smart_count} tags in the source.'
-                ] );
+            $srcTagMap = $this->getTagMap($srcSegMatch[ 0 ]);
+            $targetTagMap  = $this->getTagMap($targetSegMatch[ 0 ]);
 
-                return \QA::SMART_COUNT_MISMATCH;
+            foreach ($srcTagMap as $key => $count){
+
+                if ($targetTagMap[$key] !== $expectedTagCount) {
+                    $QA->addCustomError( [
+                            'code'  => \QA::SMART_COUNT_MISMATCH,
+                            'debug' => '%{smart_count} tag count mismatch',
+                            'tip'   => 'Check the count of %{smart_count} tags in the source.'
+                    ] );
+
+                    return \QA::SMART_COUNT_MISMATCH;
+                }
+
             }
 
             $QA->addCustomError( [
-                    'code'  => 0,
+                    'code' => 0,
             ] );
 
             return 0;
@@ -290,4 +326,32 @@ class Airbnb extends BaseFeature {
         return $errorType;
     }
 
+    /**
+     * Extract the tags and creates a map like that:
+     *
+     * Array
+     * (
+     *    [JXtzbWFydF9jb3VudH0=] => 2
+     * )
+     *
+     * @param $array
+     *
+     * @return array
+     */
+    protected function getTagMap( $array){
+        $srcTagMap = [];
+
+        foreach ( $array as $tag ) {
+
+            preg_match_all('/equiv-text="base64:[a-zA-Z0-9=]{1,}/', $tag, $output_array);
+
+            $output_array = str_replace('equiv-text="base64:','', $output_array[0][0]);
+
+            if( $output_array !== 'fHx8fA=='  ){
+                $srcTagMap[$output_array] = (isset($srcTagMap[$output_array])) ? $srcTagMap[$output_array] + 1 : 1;
+            }
+        }
+
+        return $srcTagMap;
+    }
 }
