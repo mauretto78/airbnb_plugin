@@ -268,20 +268,7 @@ class Airbnb extends BaseFeature {
             }
 
             //
-            // check the count of smart_count tags in the source
-            //
-            // $srcSegMatch example:
-            //
-            // Array
-            // (
-            //    [0] => Array
-            //        (
-            //            [0] => <ph id="mtc_1" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
-            //            [1] => <ph id="mtc_2" equiv-text="base64:fHx8fA=="/>
-            //            [2] => <ph id="mtc_3" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
-            //        )
-            //
-            // )
+            // check the count of smart_count tags in the target
             //
             // $targetSegMatch example:
             //
@@ -296,15 +283,13 @@ class Airbnb extends BaseFeature {
             //        )
             //
             // )
-            preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getSourceSeg(), $srcSegMatch );
             preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getTargetSeg(), $targetSegMatch );
 
-            $srcTagMap = $this->getTagMap($srcSegMatch[ 0 ]);
             $targetTagMap  = $this->getTagMap($targetSegMatch[ 0 ]);
 
-            foreach ($srcTagMap as $key => $count){
+            foreach ($targetTagMap as $key => $count){
 
-                if ($targetTagMap[$key] !== $expectedTagCount) {
+                if ($count !== $expectedTagCount) {
                     $QA->addCustomError( [
                             'code'  => \QA::SMART_COUNT_MISMATCH,
                             'debug' => '%{smart_count} tag count mismatch',
