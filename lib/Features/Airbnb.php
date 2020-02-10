@@ -268,10 +268,9 @@ class Airbnb extends BaseFeature {
             }
 
             // check the count of %{smart_count} tags in the source
-            preg_match_all('/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:JXtzbWFydF9jb3VudH0="\/>/ui', $QA->getSourceSeg(), $sourceSegMatch);
             preg_match_all('/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:JXtzbWFydF9jb3VudH0="\/>/ui', $QA->getTargetSeg(), $targetSegMatch);
 
-            if( $sourceSegMatch !== $targetSegMatch ){
+            if( count($targetSegMatch[0]) !== $expectedTagCount ){
                 $QA->addCustomError( [
                         'code'  => \QA::SMART_COUNT_MISMATCH,
                         'debug' => '%{smart_count} tag count mismatch',
