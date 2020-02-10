@@ -15,13 +15,13 @@ class SegmentDeliveryModal extends React.Component {
         if ( checked ) {
             Cookies.set('segment_delivery_modal_hide',
                 '1',
-                { expires: 30 });
+                { expires: 30, secure: true });
         }
         else {
             Cookies.set('segment_delivery_modal_hide',
                 null,
                 //set expiration date before the current date to delete the cookie
-                {expires: new Date(1)});
+                {expires: new Date(1), secure: true });
         }
     }
 

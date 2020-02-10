@@ -44,8 +44,8 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     if ( deliveryObj.showDelivery && deliveryObj.deliveryEnabled ) {
         $(document).on('setTranslation:success', function(e, data) {
             let segment = data.segment;
-            $('.buttons .deliver', segment).removeClass('disabled');
-            sessionStorage.setItem("segToDeliver" + UI.getSegmentId(segment), 1);
+            $('.buttons .deliver', UI.getSegmentById(segment.sid)).removeClass('disabled');
+            sessionStorage.setItem("segToDeliver" + segment.sid, 1);
             UI.blockButtons = false;
         });
 
@@ -109,7 +109,6 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     }
 
     var originalRegisterFooterTabs = UI.registerFooterTabs;
-    var originalCreateButtons = UI.createButtons;
     var originalgoToNextSegment = UI.gotoNextSegment;
     var originalInputEditAreaEventHandler = UI.inputEditAreaEventHandler;
     $.extend(UI, {
@@ -187,8 +186,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             if (_.isUndefined(segmentAfter)) {
                 return null;
             }
-            var segmentAfterId = UI.getSegmentId(segmentAfter);
-            return segmentAfterId;
+            return UI.getSegmentId(segmentAfter);
         },
         createButtons: function() {
             if ( deliveryObj.showDelivery ) {
@@ -545,66 +543,37 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         };
     }
 
-    function overrideGetMessages( SegmentsContainer ) {
-        SegmentsContainer.prototype.getSegments = function (  ) {
-            let items = [];
-            let collectionsTypeArray = [];
-            let self = this;
-            let isReviewImproved = !!(this.props.isReviewImproved);
-            let isReviewExtended = !!(this.props.isReviewExtended);
-            let getCollectionType = function ( segment ) {
-                let collectionType;
-                if (segment.notes) {
-                    segment.notes.forEach(function (item, index) {
-                        if ( item.note && item.note !== "" ) {
-                            if (item.note.indexOf("Collection Name: ") !== -1) {
-                                let split = item.note.split(": ");
-                                if ( split.length > 1) {
-                                    collectionType = split[1];
-                                }
-                            }
-                        }
-                    });
-                }
-                return collectionType;
-            };
-            this.state.segments.forEach(function (segImmutable, index) {
-                let segment = segImmutable.toJS();
-                let collectionType = getCollectionType(segment);
-                if (collectionsTypeArray.indexOf(collectionType) === -1) {
-                    let collectionTypeSeparator = <div id="" className="collection-type-separator" key={collectionType+index}>
-                        Collection Name: <b>{collectionType}</b></div>;
-                    items.push(collectionTypeSeparator);
-                    collectionsTypeArray.push(collectionType);
-                }
-                let item = <Segment
-                    key={segment.sid}
-                    segment={segment}
-                    timeToEdit={self.state.timeToEdit}
-                    fid={self.props.fid}
-                    isReviewImproved={isReviewImproved}
-                    isReviewExtended={isReviewExtended}
-                    enableTagProjection={self.props.enableTagProjection}
-                    decodeTextFn={self.props.decodeTextFn}
-                    tagLockEnabled={self.state.tagLockEnabled}
-                    tagModesEnabled={self.props.tagModesEnabled}
-                    speech2textEnabledFn={self.props.speech2textEnabledFn}
-                    reviewType={self.props.reviewType}
-                    setLastSelectedSegment={self.setLastSelectedSegment.bind(self)}
-                    setBulkSelection={self.setBulkSelection.bind(self)}
-                />;
-                items.push(item);
-            });
-            return items;
-        }
-    }
+
 
     function overrideSetDefaultTabOpen( SegmentFooter ) {
         SegmentFooter.prototype.setDefaultTabOpen = function (  ) {
             return false;
         }
     }
+
+    function overrideGetTranslateButtons( SegmentButtons) {
+        SegmentButtons.prototype.getTranslateButton = function (  ) {
+            const classDisable = (this.props.disabled) ? 'disabled' : '';
+            let deliveryButton;
+            if ( deliveryObj && deliveryObj.showDelivery ) {
+                const deliveryDisabled = (sessionStorage.getItem('segToDeliver' + this.currentSegmentId) === "1") ? '' : 'disabled';
+                deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
+                                        href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
+            }
+
+
+            return <React.Fragment>
+                <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e)}
+                          data-segmentid={'segment-' + this.props.segment.sid}
+                       className={'translated ' +classDisable } > {config.status_labels.TRANSLATED} </a><p>
+                    {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
+                </p></li>
+                {deliveryButton}
+            </React.Fragment>;
+        }
+    }
+
     overrideTabMessages(SegmentTabMessages);
-    overrideGetMessages(SegmentsContainer);
     overrideSetDefaultTabOpen(SegmentFooter);
+    overrideGetTranslateButtons(SegmentButtons);
 })() ;
