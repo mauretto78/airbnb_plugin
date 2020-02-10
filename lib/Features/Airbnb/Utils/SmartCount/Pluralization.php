@@ -30,6 +30,7 @@ class Pluralization
             case "de-DE":
             case "el-GR":
             case "en-AU":
+            case "en-CA":
             case "en-GB":
             case "es-ES":
             case "es-AR":

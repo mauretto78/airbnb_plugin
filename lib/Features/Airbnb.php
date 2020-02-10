@@ -19,7 +19,6 @@ use ReflectionException;
 use Segments_SegmentStruct;
 use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
-use SubFiltering\Filters\HtmlToPhToLayer2;
 use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
 use Users_UserStruct;
@@ -257,21 +256,36 @@ class Airbnb extends BaseFeature {
             $expectedTagCount                = 1 + $separatorCount;
             $pluralizationCountForTargetLang = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
 
-            if ($expectedTagCount === $pluralizationCountForTargetLang) {
+            // check for |||| count correspondence
+            if ($expectedTagCount !== $pluralizationCountForTargetLang) {
                 $QA->addCustomError( [
-                        'code'  => 0,
+                        'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
+                        'debug' => 'Smart Count rules not compliant with target language',
+                        'tip'   => 'Check your language specific configuration.'
                 ] );
 
-                return 0;
+                return \QA::SMART_COUNT_PLURAL_MISMATCH;
+            }
+
+            // check the count of %{smart_count} tags in the source
+            preg_match_all('/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:JXtzbWFydF9jb3VudH0="\/>/ui', $QA->getSourceSeg(), $sourceSegMatch);
+            preg_match_all('/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:JXtzbWFydF9jb3VudH0="\/>/ui', $QA->getTargetSeg(), $targetSegMatch);
+
+            if( $sourceSegMatch !== $targetSegMatch ){
+                $QA->addCustomError( [
+                        'code'  => \QA::SMART_COUNT_MISMATCH,
+                        'debug' => '%{smart_count} tag count mismatch',
+                        'tip'   => 'Check the count of %{smart_count} tags in the source.'
+                ] );
+
+                return \QA::SMART_COUNT_MISMATCH;
             }
 
             $QA->addCustomError( [
-                    'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
-                    'debug' => 'Smart Count rules not compliant with target language',
-                    'tip'   => 'Check your language specific configuration.'
+                    'code'  => 0,
             ] );
 
-            return \QA::SMART_COUNT_PLURAL_MISMATCH;
+            return 0;
         }
 
         return $errorType;
