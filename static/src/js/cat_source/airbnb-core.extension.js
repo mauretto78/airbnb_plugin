@@ -54,7 +54,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             e.stopPropagation();
             if ( $(e.target).hasClass('disabled') )return;
             const segment = $(e.target).closest('section');
-            const idSeg = $(e.target).data('segmentid');
+            const idSeg = UI.getSegmentId(segment);
             $('.buttons .deliver', segment).addClass('disabled');
             sessionStorage.setItem("segToDeliver" + idSeg, 0);
 
