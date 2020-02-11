@@ -573,7 +573,30 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         }
     }
 
+    function overrideGetReviseButtons( SegmentButtons) {
+        SegmentButtons.prototype.getReviewButtons = function (  ) {
+            const classDisable = (this.props.disabled) ? 'disabled' : '';
+            let deliveryButton;
+            if ( deliveryObj && deliveryObj.showDelivery ) {
+                const deliveryDisabled = (sessionStorage.getItem('segToDeliver' + this.currentSegmentId) === "1") ? '' : 'disabled';
+                deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
+                                        href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
+            }
+
+
+            return <React.Fragment>
+                <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e)}
+                       data-segmentid={'segment-' + this.props.segment.sid}
+                       className={'approved ' +classDisable } > {config.status_labels.APPROVED} </a><p>
+                    {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
+                </p></li>
+                {deliveryButton}
+            </React.Fragment>;
+        }
+    }
+
     overrideTabMessages(SegmentTabMessages);
     overrideSetDefaultTabOpen(SegmentFooter);
     overrideGetTranslateButtons(SegmentButtons);
+    overrideGetReviseButtons(SegmentButtons);
 })() ;
