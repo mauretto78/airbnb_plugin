@@ -598,5 +598,5 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     overrideTabMessages(SegmentTabMessages);
     overrideSetDefaultTabOpen(SegmentFooter);
     overrideGetTranslateButtons(SegmentButtons);
-    // overrideGetReviseButtons(SegmentButtons);
+    overrideGetReviseButtons(SegmentButtons);
 })() ;
