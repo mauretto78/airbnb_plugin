@@ -574,7 +574,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     }
 
     function overrideGetReviseButtons( SegmentButtons) {
-        SegmentButtons.prototype.getReviewButtons = function (  ) {
+        SegmentButtons.prototype.getReviewButton = function (  ) {
             const classDisable = (this.props.disabled) ? 'disabled' : '';
             let deliveryButton;
             if ( deliveryObj && deliveryObj.showDelivery ) {
@@ -598,5 +598,5 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     overrideTabMessages(SegmentTabMessages);
     overrideSetDefaultTabOpen(SegmentFooter);
     overrideGetTranslateButtons(SegmentButtons);
-    overrideGetReviseButtons(SegmentButtons);
+    // overrideGetReviseButtons(SegmentButtons);
 })() ;
