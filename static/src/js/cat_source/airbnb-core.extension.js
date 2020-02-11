@@ -552,6 +552,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     }
 
     function overrideGetTranslateButtons( SegmentButtons) {
+        var originalGetTranslateButton  = SegmentButtons.prototype.getTranslateButton;
         SegmentButtons.prototype.getTranslateButton = function (  ) {
             const classDisable = (this.props.disabled) ? 'disabled' : '';
             let deliveryButton;
@@ -559,39 +560,40 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                 const deliveryDisabled = (sessionStorage.getItem('segToDeliver' + this.currentSegmentId) === "1") ? '' : 'disabled';
                 deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
                                         href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
+                return <React.Fragment>
+                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e)}
+                           data-segmentid={'segment-' + this.props.segment.sid}
+                           className={'translated ' +classDisable } > {config.status_labels.TRANSLATED} </a><p>
+                        {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
+                    </p></li>
+                    {deliveryButton}
+                </React.Fragment>;
             }
-
-
-            return <React.Fragment>
-                <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e)}
-                          data-segmentid={'segment-' + this.props.segment.sid}
-                       className={'translated ' +classDisable } > {config.status_labels.TRANSLATED} </a><p>
-                    {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
-                </p></li>
-                {deliveryButton}
-            </React.Fragment>;
+            return originalGetTranslateButton.apply(this, arguments);
         }
     }
 
     function overrideGetReviseButtons( SegmentButtons) {
+        var originalGetReviewButton = SegmentButtons.prototype.getReviewButton;
         SegmentButtons.prototype.getReviewButton = function (  ) {
             const classDisable = (this.props.disabled) ? 'disabled' : '';
+            const className = ReviewExtended.enabled() ? "revise-button-" + ReviewExtended.number : '';
+
             let deliveryButton;
             if ( deliveryObj && deliveryObj.showDelivery ) {
                 const deliveryDisabled = (sessionStorage.getItem('segToDeliver' + this.currentSegmentId) === "1") ? '' : 'disabled';
                 deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
                                         href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
+                return <React.Fragment>
+                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e)}
+                           data-segmentid={'segment-' + this.props.segment.sid}
+                           className={'approved ' + classDisable + " " + className} > {config.status_labels.APPROVED} </a><p>
+                        {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
+                    </p></li>
+                    {deliveryButton}
+                </React.Fragment>;
             }
-
-
-            return <React.Fragment>
-                <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e)}
-                       data-segmentid={'segment-' + this.props.segment.sid}
-                       className={'approved ' +classDisable } > {config.status_labels.APPROVED} </a><p>
-                    {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
-                </p></li>
-                {deliveryButton}
-            </React.Fragment>;
+            return originalGetReviewButton.apply(this, arguments);
         }
     }
 
