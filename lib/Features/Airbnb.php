@@ -249,15 +249,14 @@ class Airbnb extends BaseFeature {
      */
     public function checkTagMismatch( $errorType, \QA $QA ) {
 
-        //check for smart count sign ( base64 encoded "||||" === "fHx8fA==" )
+        //check for smart count separator sign ( base64 encoded "||||" === "fHx8fA==" )
         if ( strpos( $QA->getSourceSeg(), "equiv-text=\"base64:fHx8fA==\"" ) !== false ) {
 
             $separatorCount                  = substr_count( $QA->getTargetSeg(), "equiv-text=\"base64:fHx8fA==\"" );
-            $expectedTagCount                = 1 + $separatorCount;
             $pluralizationCountForTargetLang = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
 
             // check for |||| count correspondence
-            if ( $expectedTagCount !== $pluralizationCountForTargetLang ) {
+            if ( (1 + $separatorCount) !== $pluralizationCountForTargetLang ) {
                 $QA->addCustomError( [
                         'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
                         'debug' => 'Smart Count rules not compliant with target language',
@@ -283,13 +282,28 @@ class Airbnb extends BaseFeature {
             //        )
             //
             // )
+            preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getSourceSeg(), $sourceSegMatch );
             preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getTargetSeg(), $targetSegMatch );
 
+            $sourceTagMap  = $this->getTagMap($sourceSegMatch[ 0 ]);
             $targetTagMap  = $this->getTagMap($targetSegMatch[ 0 ]);
 
-            foreach ($targetTagMap as $key => $count){
+            foreach ($sourceTagMap as $key => $count){
 
-                if ($count !== $expectedTagCount) {
+                //
+                // calculate the expected tag count
+                //
+                // Example:
+                //
+                // Suppose that there are 4 tags %{new_line_break} in the source
+                //
+                // if target has 1 plural forms the expected tag count is 2
+                // if target has 2 plural forms the expected tag count is 4
+                // if target has 3 plural forms the expected tag count is 6
+                //
+                $expectedTagCount = ( $count / 2 ) * $pluralizationCountForTargetLang;
+
+                if( false === isset($targetTagMap[$key]) or $targetTagMap[$key] !== $expectedTagCount  ){
                     $QA->addCustomError( [
                             'code'  => \QA::SMART_COUNT_MISMATCH,
                             'debug' => '%{smart_count} tag count mismatch',
