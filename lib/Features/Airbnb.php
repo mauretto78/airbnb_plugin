@@ -252,11 +252,11 @@ class Airbnb extends BaseFeature {
         //check for smart count separator sign ( base64 encoded "||||" === "fHx8fA==" )
         if ( strpos( $QA->getSourceSeg(), "equiv-text=\"base64:fHx8fA==\"" ) !== false ) {
 
-            $separatorCount                  = substr_count( $QA->getTargetSeg(), "equiv-text=\"base64:fHx8fA==\"" );
-            $pluralizationCountForTargetLang = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
+            $targetSeparatorCount   = substr_count( $QA->getTargetSeg(), "equiv-text=\"base64:fHx8fA==\"" );
+            $targetPluralFormsCount = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
 
             // check for |||| count correspondence
-            if ( (1 + $separatorCount) !== $pluralizationCountForTargetLang ) {
+            if ( ( 1 + $targetSeparatorCount ) !== $targetPluralFormsCount ) {
                 $QA->addCustomError( [
                         'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
                         'debug' => 'Smart Count rules not compliant with target language',
@@ -285,25 +285,25 @@ class Airbnb extends BaseFeature {
             preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getSourceSeg(), $sourceSegMatch );
             preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getTargetSeg(), $targetSegMatch );
 
-            $sourceTagMap  = $this->getTagMap($sourceSegMatch[ 0 ]);
-            $targetTagMap  = $this->getTagMap($targetSegMatch[ 0 ]);
+            $sourceTagMap = $this->getTagMap( $sourceSegMatch[ 0 ] );
+            $targetTagMap = $this->getTagMap( $targetSegMatch[ 0 ] );
 
-            foreach ($sourceTagMap as $key => $count){
+            foreach ( $sourceTagMap as $key => $count ) {
 
                 //
                 // calculate the expected tag count
                 //
                 // Example:
                 //
-                // Suppose that there are 4 tags %{new_line_break} in the source
+                // Suppose that there are 4 tags %{new_line_break} in the source. We know that the source is always english, so the plural form for source is 2.
                 //
                 // if target has 1 plural forms the expected tag count is 2
                 // if target has 2 plural forms the expected tag count is 4
                 // if target has 3 plural forms the expected tag count is 6
                 //
-                $expectedTagCount = ( $count / 2 ) * $pluralizationCountForTargetLang;
+                $expectedTagCount = ( $count / 2 ) * $targetPluralFormsCount;
 
-                if( false === isset($targetTagMap[$key]) or $targetTagMap[$key] !== $expectedTagCount  ){
+                if ( false === isset( $targetTagMap[ $key ] ) or $targetTagMap[ $key ] !== $expectedTagCount ) {
                     $QA->addCustomError( [
                             'code'  => \QA::SMART_COUNT_MISMATCH,
                             'debug' => '%{smart_count} tag count mismatch',
@@ -337,17 +337,17 @@ class Airbnb extends BaseFeature {
      *
      * @return array
      */
-    protected function getTagMap( $array){
+    protected function getTagMap( $array ) {
         $srcTagMap = [];
 
         foreach ( $array as $tag ) {
 
-            preg_match_all('/equiv-text="base64:[a-zA-Z0-9=]{1,}/', $tag, $output_array);
+            preg_match_all( '/equiv-text="base64:[a-zA-Z0-9=]{1,}/', $tag, $output_array );
 
-            $output_array = str_replace('equiv-text="base64:','', $output_array[0][0]);
+            $output_array = str_replace( 'equiv-text="base64:', '', $output_array[ 0 ][ 0 ] );
 
-            if( $output_array !== 'fHx8fA=='  ){
-                $srcTagMap[$output_array] = (isset($srcTagMap[$output_array])) ? $srcTagMap[$output_array] + 1 : 1;
+            if ( $output_array !== 'fHx8fA==' ) {
+                $srcTagMap[ $output_array ] = ( isset( $srcTagMap[ $output_array ] ) ) ? $srcTagMap[ $output_array ] + 1 : 1;
             }
         }
 
