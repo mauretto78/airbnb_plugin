@@ -249,13 +249,17 @@ class Airbnb extends BaseFeature {
      */
     public function checkTagMismatch( $errorType, \QA $QA ) {
 
-        //check for smart count separator sign ( base64 encoded "||||" === "fHx8fA==" )
+        //check for smart count separator |||| in source segment ( base64 encoded "||||" === "fHx8fA==" )
         if ( strpos( $QA->getSourceSeg(), "equiv-text=\"base64:fHx8fA==\"" ) !== false ) {
 
+            //
+            // ----------------------------------------------------------------
+            // 1. check for |||| count correspondence
+            // ----------------------------------------------------------------
+            //
             $targetSeparatorCount   = substr_count( $QA->getTargetSeg(), "equiv-text=\"base64:fHx8fA==\"" );
             $targetPluralFormsCount = Pluralization::getCountFromLang( $QA->getTargetSegLang() );
 
-            // check for |||| count correspondence
             if ( ( 1 + $targetSeparatorCount ) !== $targetPluralFormsCount ) {
                 $QA->addCustomError( [
                         'code'  => \QA::SMART_COUNT_PLURAL_MISMATCH,
@@ -267,52 +271,96 @@ class Airbnb extends BaseFeature {
             }
 
             //
-            // check the count of smart_count tags in the target
+            // ----------------------------------------------------------------
+            // 2. Check the count of smart_count tags in the target
+            // ----------------------------------------------------------------
             //
-            // $targetSegMatch example:
+            // Example:
             //
-            // Array
-            // (
-            //    [0] => Array
-            //        (
-            //            [0] => <ph id="mtc_1" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
-            //            [1] => <ph id="mtc_2" equiv-text="base64:fHx8fA=="/>
-            //            [2] => <ph id="mtc_3" equiv-text="base64:JXtzbWFydF9jb3VudH0="/>
-            //            [3] => <ph id="mtc_2" equiv-text="base64:fHx8fA=="/>
-            //        )
+            // $source = "<ph id="mtc_1" equiv-text="base64:JXtmaXJzdF9uYW1lfQ=="/> has 1 hour left to respond<ph id="mtc_2" equiv-text="base64:fHx8fA=="/><ph id="mtc_3"
+            // equiv-text="base64:JXtmaXJzdF9uYW1lfQ=="/> has <ph id="mtc_4" equiv-text="base64:JXtzbWFydF9jb3VudH0="/> hours left to respond";
             //
+            // From this, $expectedTargetTagMap is obtained by analysing the splitted source segment taking into account the number of plural forms of target.
+            //
+            // 1 Plural form:
+            //
+            // $expectedTargetTagMap =
+            // array (
+            //  0 =>
+            //  array (
+            //    0 => 'equiv-text="base64:JXtmaXJzdF9uYW1lfQ==',
+            //  ),
             // )
-            preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getSourceSeg(), $sourceSegMatch );
-            preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $QA->getTargetSeg(), $targetSegMatch );
+            //
+            // 2 Plural forms:
+            //
+            // $expectedTargetTagMap =
+            // array (
+            //  0 =>
+            //  array (
+            //    0 => 'equiv-text="base64:JXtmaXJzdF9uYW1lfQ==',
+            //  ),
+            //  1 =>
+            //  array (
+            //    0 => 'equiv-text="base64:JXtmaXJzdF9uYW1lfQ==',
+            //    1 => 'equiv-text="base64:JXtzbWFydF9jb3VudH0=',
+            //  ),
+            // )
+            //
+            // 3 Plural forms:
+            //
+            // $expectedTargetTagMap =
+            // array (
+            //  0 =>
+            //  array (
+            //    0 => 'equiv-text="base64:JXtmaXJzdF9uYW1lfQ==',
+            //  ),
+            //  1 =>
+            //  array (
+            //    0 => 'equiv-text="base64:JXtmaXJzdF9uYW1lfQ==',
+            //    1 => 'equiv-text="base64:JXtzbWFydF9jb3VudH0=',
+            //  ),
+            //  2 =>
+            //  array (
+            //    0 => 'equiv-text="base64:JXtmaXJzdF9uYW1lfQ==',
+            //    1 => 'equiv-text="base64:JXtzbWFydF9jb3VudH0=',
+            //  ),
+            // )
+            //
+            // Finally, the target tag map is compared to $expectedTargetTagMap
+            //
+            $sourceTagMap = [];
+            $sourceSplittedByPipeSep = preg_split('/<ph id="mtc_[0-9]{0,10}" equiv-text="base64:fHx8fA=="\/>/', $QA->getSourceSeg() );
 
-            $sourceTagMap = $this->getTagMap( $sourceSegMatch[ 0 ] );
-            $targetTagMap = $this->getTagMap( $targetSegMatch[ 0 ] );
+            foreach ($sourceSplittedByPipeSep as $item){
+                preg_match_all('/equiv-text="base64:[a-zA-Z0-9=]{1,}/', $item, $itemSegMatch );
+                //preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $item, $itemSegMatch );
+                $sourceTagMap[] = $itemSegMatch[0];
+            }
 
-            foreach ( $sourceTagMap as $key => $count ) {
+            $expectedTargetTagMap[] = $sourceTagMap[0];
 
-                //
-                // calculate the expected tag count
-                //
-                // Example:
-                //
-                // Suppose that there are 4 tags %{new_line_break} in the source. We know that the source is always english, so the plural form for source is 2.
-                //
-                // if target has 1 plural forms the expected tag count is 2
-                // if target has 2 plural forms the expected tag count is 4
-                // if target has 3 plural forms the expected tag count is 6
-                //
-                $expectedTagCount = ( $count / 2 ) * $targetPluralFormsCount;
+            for ($i=1; $i < $targetPluralFormsCount; $i++){
+                $expectedTargetTagMap[] = $sourceTagMap[1];
+            }
 
-                if ( false === isset( $targetTagMap[ $key ] ) or $targetTagMap[ $key ] !== $expectedTagCount ) {
-                    $QA->addCustomError( [
-                            'code'  => \QA::SMART_COUNT_MISMATCH,
-                            'debug' => '%{smart_count} tag count mismatch',
-                            'tip'   => 'Check the count of %{smart_count} tags in the source.'
-                    ] );
+            $targetTagMap = [];
+            $targetSplittedByPipeSep = preg_split('/<ph id="mtc_[0-9]{0,10}" equiv-text="base64:fHx8fA=="\/>/', $QA->getTargetSeg() );
 
-                    return \QA::SMART_COUNT_MISMATCH;
-                }
+            foreach ($targetSplittedByPipeSep as $item){
+                //preg_match_all( '/<ph id ?= ?[\'"]mtc_[0-9]{1,9}?[\'"] equiv-text="base64:[a-zA-Z0-9=]{1,}"\/>/', $item, $itemSegMatch );
+                preg_match_all('/equiv-text="base64:[a-zA-Z0-9=]{1,}/', $item, $itemSegMatch );
+                $targetTagMap[] = $itemSegMatch[0];
+            }
 
+            if( $expectedTargetTagMap !== $targetTagMap ){
+                $QA->addCustomError( [
+                        'code'  => \QA::SMART_COUNT_MISMATCH,
+                        'debug' => '%{smart_count} tag count mismatch',
+                        'tip'   => 'Check the count of %{smart_count} tags in the source.'
+                ] );
+
+                return \QA::SMART_COUNT_MISMATCH;
             }
 
             $QA->addCustomError( [
@@ -323,34 +371,5 @@ class Airbnb extends BaseFeature {
         }
 
         return $errorType;
-    }
-
-    /**
-     * Extract the tags and creates a map like that:
-     *
-     * Array
-     * (
-     *    [JXtzbWFydF9jb3VudH0=] => 2
-     * )
-     *
-     * @param $array
-     *
-     * @return array
-     */
-    protected function getTagMap( $array ) {
-        $srcTagMap = [];
-
-        foreach ( $array as $tag ) {
-
-            preg_match_all( '/equiv-text="base64:[a-zA-Z0-9=]{1,}/', $tag, $output_array );
-
-            $output_array = str_replace( 'equiv-text="base64:', '', $output_array[ 0 ][ 0 ] );
-
-            if ( $output_array !== 'fHx8fA==' ) {
-                $srcTagMap[ $output_array ] = ( isset( $srcTagMap[ $output_array ] ) ) ? $srcTagMap[ $output_array ] + 1 : 1;
-            }
-        }
-
-        return $srcTagMap;
     }
 }
