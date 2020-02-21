@@ -295,6 +295,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             return notesHtml;
         };
 
+
         var PLURAL_TYPES = {
 
             "chinese_like" : {
@@ -544,7 +545,6 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     }
 
 
-
     function overrideSetDefaultTabOpen( SegmentFooter ) {
         SegmentFooter.prototype.setDefaultTabOpen = function (  ) {
             return false;
@@ -597,8 +597,27 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         }
     }
 
+    function overrideGetContributionsSuccess(SegmentActions) {
+        var originalFunction = SegmentActions.getContributionsSuccess;
+        SegmentActions.getContributionsSuccess = function(data, sid) {
+            if (config.source_code === "en-US" && config.target_code === "ja-JP" ) {
+                data.matches = _.filter( data.matches, function ( match ) {
+                    return match.created_by !== "MT"
+                } );
+
+                return originalFunction.apply(this, [data, sid]);
+            } else {
+                return originalFunction.apply(this, arguments);
+            }
+        }
+    }
+
     overrideTabMessages(SegmentTabMessages);
     overrideSetDefaultTabOpen(SegmentFooter);
     overrideGetTranslateButtons(SegmentButtons);
     overrideGetReviseButtons(SegmentButtons);
+
+    //Delete MT matches for japanese target and en-Us source
+    overrideGetContributionsSuccess(SegmentActions);
+
 })() ;
