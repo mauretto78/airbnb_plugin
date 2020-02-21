@@ -602,7 +602,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
         SegmentActions.getContributionsSuccess = function(data, sid) {
             if (config.source_code === "en-US" && config.target_code === "ja-JP" ) {
                 data.matches = _.filter( data.matches, function ( match ) {
-                    return match.created_by !== "MT"
+                    return match.match !== "MT"
                 } );
 
                 return originalFunction.apply(this, [data, sid]);
