@@ -618,6 +618,6 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
     overrideGetReviseButtons(SegmentButtons);
 
     //Delete MT matches for japanese target and en-Us source
-    overrideGetContributionsSuccess(SegmentActions);
+    //overrideGetContributionsSuccess(SegmentActions);
 
 })() ;
