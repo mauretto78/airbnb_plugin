@@ -12,6 +12,7 @@ use API\V2\Json\ProjectUrls;
 use Exceptions\ValidationError;
 use Features;
 use Features\Airbnb\Utils\SmartCount\Pluralization;
+use Features\Airbnb\Utils\SubFiltering\Filters\NewLine;
 use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
 use Features\Airbnb\Utils\SubFiltering\Filters\Variables;
 use Klein\Klein;
@@ -22,6 +23,7 @@ use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
 use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
+use SubFiltering\Filters\RestorePlaceHoldersToXLIFFLtGt;
 use Users_UserStruct;
 
 class Airbnb extends BaseFeature {
@@ -210,6 +212,7 @@ class Airbnb extends BaseFeature {
     public function fromLayer0ToLayer1( Pipeline $channel ) {
         $channel->addAfter( new HtmlToPh(), new Variables() );
         $channel->addAfter( new Variables(), new SmartCounts() );
+        $channel->addAfter( new SmartCounts(), new NewLine() );
 
         return $channel;
     }
