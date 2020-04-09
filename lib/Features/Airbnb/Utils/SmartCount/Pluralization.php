@@ -11,6 +11,11 @@ class Pluralization
      */
     public static function getCountFromLang($lang){
         switch ($lang){
+            case "zh-CN":
+            case "zh-HK":
+            case "zh-TW":
+                return 1;
+
             case "az-AZ":
             case "id-ID":
             case "ja-JP":
@@ -19,11 +24,6 @@ class Pluralization
             case "th-TH":
             case "tr-TR":
             case "vi-VN":
-            case "zh-CN":
-            case "zh-HK":
-            case "zh-TW":
-                return 1;
-
             case "bg-BG":
             case "ca-ES":
             case "da-DK":
