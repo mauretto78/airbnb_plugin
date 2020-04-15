@@ -14,13 +14,13 @@ class Pluralization
             case "zh-CN":
             case "zh-HK":
             case "zh-TW":
+            case "ms-MY":
+            case "ja-JP":
                 return 1;
 
             case "az-AZ":
             case "id-ID":
-            case "ja-JP":
             case "ko-KR":
-            case "ms-MY":
             case "th-TH":
             case "tr-TR":
             case "vi-VN":
