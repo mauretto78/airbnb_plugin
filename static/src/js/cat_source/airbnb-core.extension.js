@@ -571,7 +571,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                 deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
                                         href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
                 return <React.Fragment>
-                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e)}
+                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e, false)}
                            data-segmentid={'segment-' + this.props.segment.sid}
                            className={'translated ' +classDisable } > {config.status_labels.TRANSLATED} </a><p>
                         {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
@@ -595,7 +595,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                 deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
                                         href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
                 return <React.Fragment>
-                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e)}
+                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e, false)}
                            data-segmentid={'segment-' + this.props.segment.sid}
                            className={'approved ' + classDisable + " " + className} > {config.status_labels.APPROVED} </a><p>
                         {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
