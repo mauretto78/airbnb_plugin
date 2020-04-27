@@ -68,7 +68,6 @@ class Pluralization
             case "hr-HR":
             case "lt-LT":
             case "lv-LV":
-            case "pl-PL":
             case "ro-RO":
             case "ru-RU":
             case "sk-SK":
@@ -78,6 +77,7 @@ class Pluralization
                 return 3;
 
             case "mt-MT":
+            case "pl-PL":
             case "sl-SI":
                 return 4;
 
