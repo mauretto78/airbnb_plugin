@@ -317,7 +317,15 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                 "rule" : "lambda { |n| n != 1 ? 1 : 0 }",
 
             },
+            "thai_like" : {
 
+                "num_forms": 2,
+
+                "doc" : [" Main translation", "Duplicate form 1 or translate differently as needed (tags must be preserved)"],
+
+                "rule" : "",
+
+            },
 
             "french_like" : {
 
@@ -511,11 +519,13 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
 
         var PLURAL_TYPE_NAME_TO_LANGUAGES = {
 
-            "chinese_like" : ["az", "id", "ja", "ko", "ms", "th", "tr", "vi", "zh", "zh-TW"],
+            "chinese_like" : [  "ja",  "ms", "zh", "zh-TW"],
 
             "german_like" : ["da", "de", "en", "es", "ka", "fi", "el", "ca", "he", "hu", "it", "nl", "no", "nn", "nb", "pt", "sv", "sq", "bg", "et", "sw", "zu", "xh"],
 
             "french_like" : ["fr", "hy", "pt", "hi"],
+
+            "thai_like" : ["az", "id", "ko", "th", "tr", "vi"],
 
             "russian_like" : ["hr", "ru", "bs", "me", "sr", "uk"],
 
@@ -561,7 +571,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                 deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
                                         href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
                 return <React.Fragment>
-                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e)}
+                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnTranslatedButton(e, false)}
                            data-segmentid={'segment-' + this.props.segment.sid}
                            className={'translated ' +classDisable } > {config.status_labels.TRANSLATED} </a><p>
                         {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
@@ -585,7 +595,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                 deliveryButton = <li><a draggable="false" id={"segment-" + this.currentSegmentId +"-button-deliver"} data-segmentid={this.currentSegmentId}
                                         href="#" className={"deliver " + deliveryDisabled}>DELIVER</a></li>;
                 return <React.Fragment>
-                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e)}
+                    <li><a id={'segment-' + this.props.segment.sid + '-button-translated'} onClick={(e)=>this.clickOnApprovedButton(e, false)}
                            data-segmentid={'segment-' + this.props.segment.sid}
                            className={'approved ' + classDisable + " " + className} > {config.status_labels.APPROVED} </a><p>
                         {(UI.isMac) ? 'CMD' : 'CTRL'} ENTER
