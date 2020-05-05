@@ -4,6 +4,10 @@
     "label": "Airbnb",
     "categories": [
       {
+        "label": "Style (Inconsistent style, Readability, Unidiomatic)",
+        "code": "STY"
+      },
+      {
         "label": "Accuracy (Addition, Omission, Mistranslation, Untranslated, Inconsistency)",
         "code": "ACC"
       },
@@ -14,10 +18,6 @@
       {
         "label": "Linguistic (Punctuation, Spelling, Grammar, Locale conventions)",
         "code": "LNG"
-      },
-      {
-        "label": "Style (Inconsistent style, Readability, Unidiomatic)",
-        "code": "STY"
       }
     ],
     "severities": [
