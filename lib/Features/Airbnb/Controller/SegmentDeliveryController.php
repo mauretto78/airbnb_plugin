@@ -16,6 +16,7 @@ use API\V2\KleinController;
 use API\V2\Validators\ChunkPasswordValidator;
 use Chunks_ChunkStruct;
 use Constants_JobStatus;
+use DateTime;
 use DomainException;
 use Features\Airbnb;
 use Features\Airbnb\Controller\Validators\AirbnbTOSAuthLoginValidator;
@@ -136,7 +137,7 @@ class SegmentDeliveryController extends KleinController {
             }
         }
 
-        $this->_makeDelivery( $segment, $segment_translation, $notes );
+        $this->_makeDelivery( $segment, $segment_translation, $notes, $this->chunk );
 
         $this->response->json( [
                 'translation' => $segment_translation->translation
@@ -145,7 +146,7 @@ class SegmentDeliveryController extends KleinController {
         return $this;
     }
 
-    protected function _makeDelivery( $segment, $segment_translation, $notes ) {
+    protected function _makeDelivery( $segment, $segment_translation, $notes, Chunks_ChunkStruct $chunk ) {
 
         $config = Airbnb::getConfig();
 
@@ -177,7 +178,12 @@ class SegmentDeliveryController extends KleinController {
                 CURLOPT_POSTFIELDS     => json_encode( $portParams /* Redundant, the URL is enough, add to pass more info to the service */ )
         ];
 
-        $resource = $mh->createResource( $config[ 'delivery_endpoint' ] . implode( "/", [ $this->chunk->id, $this->chunk->password, $segment->internal_id ] ), $curl_additional_params );
+        if( new DateTime( $chunk->create_date ) > new DateTime( "2020-08-25 10:00" ) ){
+            $resource = $mh->createResource( $config[ 'delivery_endpoint' ] . implode( "/", [ $this->chunk->id, $this->chunk->password, $segment->internal_id ] ), $curl_additional_params );
+        } else {
+            $resource = $mh->createResource( $config[ 'old_delivery_endpoint' ] . implode( "/", [ $this->chunk->id, $this->chunk->password, $segment->internal_id ] ), $curl_additional_params );
+        }
+
         $mh->multiExec();
         $mh->multiCurlCloseAll();
 
