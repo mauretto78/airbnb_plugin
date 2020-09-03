@@ -65,6 +65,8 @@ class Airbnb extends BaseFeature {
 
                 if ( strpos( $entry, 'phrase_key|¶|' ) !== false ) {
                     $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( str_replace( 'phrase_key|¶|', '', $entry ) . $_segment_metadata[ 'segment' ] );
+                } elseif ( strpos( $entry, 'translation_context|¶|' ) !== false ){
+                    $_segment_metadata[ 'additional_params' ][ 'spice' ] = md5( str_replace( 'translation_context|¶|', '', $entry ) . $_segment_metadata[ 'segment' ] );
                 }
 
             }
@@ -132,7 +134,13 @@ class Airbnb extends BaseFeature {
      *
      */
     public function rewriteContributionContexts( $segmentsList, $postInput ) {
-        $segmentsList->id_before->segment = md5( str_replace( 'phrase_key|¶|', '', $postInput[ 'context_before' ] ) . $segmentsList->id_segment->segment );
+
+        if( strpos( $postInput[ 'context_before' ], 'phrase_key|¶|' ) !== false ){
+            $segmentsList->id_before->segment = md5( str_replace( 'phrase_key|¶|', '', $postInput[ 'context_before' ] ) . $segmentsList->id_segment->segment );
+        } else {
+            $segmentsList->id_before->segment = md5( str_replace( 'translation_context|¶|', '', $postInput[ 'context_before' ] ) . $segmentsList->id_segment->segment );
+        }
+
         $segmentsList->id_after           = null;
     }
 
