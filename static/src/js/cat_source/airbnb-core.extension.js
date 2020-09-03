@@ -131,7 +131,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
             try {
                 segmentObj = SegmentStore.getSegmentByIdToJS(segmentId, UI.getSegmentFileId($segment));
                 phraseKeyNote = segmentObj.notes.find((item) => {
-                    return item.note.indexOf("phrase_key|¶|") >= 0;
+                    return item.note.indexOf("phrase_key|¶|") >= 0 || item.note.indexOf("translation_context|¶|") >= 0;
                 });
             } catch (e) {
                 return null;
