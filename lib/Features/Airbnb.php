@@ -30,12 +30,6 @@ class Airbnb extends BaseFeature {
 
     protected static $service_types = [ 'standard', 'priority' ];
 
-    const REFERENCE_QUOTE_METADATA_KEY = "append_to_pid";
-
-    const BATCH_WORD_COUNT_METADATA_KEY = "batch_word_count";
-
-    const MANUAL_APPROVE_METADATA_KEY = "manual_setup";
-
     const DELIVERY_COOKIE_PREFIX = 'airbnb_session_';
 
     public static $dependencies = [
@@ -151,54 +145,6 @@ class Airbnb extends BaseFeature {
      */
     public static function projectUrls( ProjectUrls $formatted ) {
         return $formatted;
-    }
-
-    /**
-     * Add options to project metadata
-     *
-     * @param $metadata
-     * @param $__postInput
-     *
-     * @return mixed
-     * @throws \Exception
-     * @see \NewController::__validateMetadataParam()
-     *
-     */
-    public function filterProjectMetadata( $metadata, $__postInput ) {
-
-        if ( isset( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) ) {
-            if ( !is_numeric( $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] ) ) {
-                throw new ValidationError( "Quote PID '{$__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
-            }
-            $metadata[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ] = $__postInput[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ];
-        }
-
-        if ( isset( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
-            if ( !is_numeric( $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] ) ) {
-                throw new ValidationError( "Quote PID '{$__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ]}' is not allowed. Only numbers allowed." );
-            }
-            $metadata[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = $__postInput[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ];
-        }
-
-        if ( isset( $__postInput[ Airbnb::MANUAL_APPROVE_METADATA_KEY ] ) && !empty( $__postInput[ Airbnb::MANUAL_APPROVE_METADATA_KEY ] ) ) {
-            $metadata[ Airbnb::MANUAL_APPROVE_METADATA_KEY ] = $__postInput[ Airbnb::MANUAL_APPROVE_METADATA_KEY ];
-        }
-
-        return $metadata;
-    }
-
-    /**
-     * @param $filter_args
-     *
-     * @return mixed
-     * @see \NewController::__construct()
-     */
-    public function filterNewProjectInputFilters( $filter_args ) {
-        $filter_args[ Airbnb::REFERENCE_QUOTE_METADATA_KEY ]  = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
-        $filter_args[ Airbnb::BATCH_WORD_COUNT_METADATA_KEY ] = [ 'filter' => FILTER_SANITIZE_NUMBER_INT ];
-        $filter_args[ Airbnb::MANUAL_APPROVE_METADATA_KEY ]   = [ 'filter' => FILTER_VALIDATE_BOOLEAN | FILTER_NULL_ON_FAILURE ];
-
-        return $filter_args;
     }
 
     /**
