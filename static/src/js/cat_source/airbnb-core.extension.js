@@ -1,3 +1,5 @@
+import TextUtils from "../../../../../../public/js/cat_source/es6/utils/textUtils";
+
 const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal').default ;
 (function() {
 
@@ -250,6 +252,7 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                                     let href = (text[text.length - 1] === '.') ? text.substring(0, text.length - 1): text;
                                     return '<a href="'+ href +'" target="_blank">' + text + '</a>';
                                 });
+                                note = TextUtils.replaceUrl(note.replace(/[ ]*\n/g, '<br>\n'))
                                 let html = <div className="note" key={"note-" + index}>
                                     <span className="note-label">{split[0]}:</span>
                                     <span dangerouslySetInnerHTML={self.allowHTML( note )}/>
