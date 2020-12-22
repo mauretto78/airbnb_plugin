@@ -1,5 +1,3 @@
-import TextUtils from "../../../../../../public/js/cat_source/es6/utils/textUtils";
-
 const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal').default ;
 (function() {
 
