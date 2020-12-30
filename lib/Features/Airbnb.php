@@ -9,7 +9,8 @@
 namespace Features;
 
 use API\V2\Json\ProjectUrls;
-use Exceptions\ValidationError;
+use Engines_AbstractEngine;
+use Engines_MMT;
 use Features;
 use Features\Airbnb\Utils\SmartCount\Pluralization;
 use Features\Airbnb\Utils\SubFiltering\Filters\SmartCounts;
@@ -22,6 +23,7 @@ use SubFiltering\Commons\Pipeline;
 use SubFiltering\Filters\HtmlToPh;
 use SubFiltering\Filters\LtGtDoubleDecode;
 use SubFiltering\Filters\PlaceHoldXliffTags;
+use TaskRunner\Commons\QueueElement;
 use Users_UserStruct;
 
 class Airbnb extends BaseFeature {
@@ -331,4 +333,13 @@ class Airbnb extends BaseFeature {
 
         return $errorType;
     }
+
+    public static function analysisBeforeMTGetContribution( $config, Engines_AbstractEngine $engine, QueueElement $queueElement ){
+        if( $engine instanceof Engines_MMT ){
+            //tell to the MMT that this is the analysis phase ( override default configuration )
+            $engine->setAnalysis( false );
+        }
+        return $config;
+    }
+
 }
