@@ -100,7 +100,11 @@ class SegmentDeliveryController extends KleinController {
         if( !$this->chunk->getIsReview() ){
             $redirect_url = Routes::translate(  $project->name, $this->chunk->id, $this->chunk->password, $this->chunk->source, $this->chunk->target );
         } else {
-            $redirect_url = Routes::revise( $project->name, $this->chunk->id, $this->chunkReview->review_password, $this->chunk->source, $this->chunk->target );
+            $options = [
+                    'revision_number' => ($this->chunk->isSecondPassReview()) ? 2 : 1
+            ];
+
+            $redirect_url = Routes::revise( $project->name, $this->chunk->id, $this->chunkReview->review_password, $this->chunk->source, $this->chunk->target, $options );
         }
 
         $this->response->header( 'Cache-Control', 'max-age=0' );
