@@ -245,11 +245,6 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
                             let split = item.note.split(":");
                             if ( split.length > 1) {
                                 let note = item.note.replace(split[0] + ':', '');
-                                let regExpUrl = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/$.\w-_]*)?\??(?:\S+)#?(?:[\w]*))?)/gmi;
-                                note = note.replace(regExpUrl, function ( match, text ) {
-                                    let href = (text[text.length - 1] === '.') ? text.substring(0, text.length - 1): text;
-                                    return '<a href="'+ href +'" target="_blank">' + text + '</a>';
-                                });
                                 note = TextUtils.replaceUrl(note.replace(/[ ]*\n/g, '<br>\n'))
                                 let html = <div className="note" key={"note-" + index}>
                                     <span className="note-label">{split[0]}:</span>
