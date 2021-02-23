@@ -70,12 +70,12 @@ class Pluralization
             case "lv-LV":
             case "ro-RO":
             case "ru-RU":
-            case "sk-SK":
             case "sr-Latn-RS":
             case "sr-ME":
             case "uk-UA":
                 return 3;
 
+            case "sk-SK":
             case "mt-MT":
             case "pl-PL":
             case "sl-SI":
