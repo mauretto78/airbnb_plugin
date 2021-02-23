@@ -346,11 +346,11 @@ const SegmentDeliveryModal = require('./components/modals/SegmentDeliveryModal')
 
             "czech_like" : {
 
-                "num_forms" : 3,
+                "num_forms" : 4,
 
-                "doc" : ["When count is 1", "When count is 2, 3, 4", "Everything else (0, 5, 6, ...)"],
+                "doc" : ["When count is 1 – one", "When count ends in 2~4, excluding 12~14 (2, 3, 4, 22, ...) – few", "Everything else (0, 5, 6, ...) – many", "Decimal fractions - other"],
 
-                "rule" : "lambda { |n| (n == 1) ? 0 : (n >= 2 && n <= 4) ? 1 : 2 }"
+                "rule" : "lambda { |n| (n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2) }"
 
             },
 
