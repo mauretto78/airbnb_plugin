@@ -63,8 +63,8 @@ class Pluralization
             case "zu-ZA":
                 return 2;
 
+            case "sk-SK":
             case "bs-BA":
-            case "cs-CZ":
             case "hr-HR":
             case "lt-LT":
             case "lv-LV":
@@ -75,7 +75,7 @@ class Pluralization
             case "uk-UA":
                 return 3;
 
-            case "sk-SK":
+            case "cs-CZ":
             case "mt-MT":
             case "pl-PL":
             case "sl-SI":
